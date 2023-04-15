@@ -94,10 +94,30 @@
         width: 70vw;
         height: calc(70vw * 0.25);
         mix-blend-mode: color-dodge;
+        opacity: 0.1;
         /*
         width: 1308px;
         height: 326px;
         */
+      }
+
+      #info {
+        position: absolute;
+        left: 0;
+        height: 0;
+        z-index: 2;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .info-item {
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+        font-size: 2em;
+        color: #fff;
       }
 
       .logo-animations {
@@ -358,6 +378,10 @@
         </g>
       </svg>
     </section>
+    <section id="info" onclick="play()">
+      <div class="info-item">CLICK TO PLAY</div>
+    </section>
+
     <section id="debug">
       <div>now: <span id="debug-time"></span></div>
       <div>seq: <span id="debug-seq"></span></div>
@@ -367,7 +391,25 @@
   </body>
   <script>
     //main();
-
+    let demoPlaying = false;
+    function play() {
+      if (!demoPlaying) {
+        const audio = document.getElementById("music");
+        audio
+          .play()
+          .then(() => {
+            demoPlaying = true;
+            document.getElementById("info").style.display = "none";
+            document.getElementById("outron").style.opacity = 1.0;
+            main();
+            clearInterval(playAttempt);
+          })
+          .catch((error) => {
+            console.log("Unable to play audio, User has not interacted yet.");
+          });
+      }
+    }
+    /*
     let playAttempt = setInterval(() => {
       const audio = document.getElementById("music");
       audio
@@ -377,8 +419,8 @@
           clearInterval(playAttempt);
         })
         .catch((error) => {
-          console.log("Unable to play the video, User has not interacted yet.");
+          console.log("Unable to play audio, User has not interacted yet.");
         });
-    }, 3000);
+    }, 3000);*/
   </script>
 </html>
