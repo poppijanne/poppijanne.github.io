@@ -91,6 +91,12 @@ window.addEventListener("keydown", (event) => {
         params: { texture: TEXTURES.GRID },
       };
       break;
+    case "h":
+      eventToBeAdded = {
+        id: `hit-${timeline.events.length + 1}`,
+        type: EVENT_TYPES.HIT,
+      };
+      break;
     case "z":
       eventToBeAdded = {
         id: `stretch-stretch-${timeline.events.length + 1}`,
@@ -115,6 +121,7 @@ window.addEventListener("keydown", (event) => {
 const loadTime = Date.now();
 
 const EVENT_TYPES = {
+  HIT: 4,
   PALETTE: 1,
   TEXTURE: 2,
   STRETCH: 3,
@@ -143,36 +150,9 @@ class Event {
   }
 }
 
-class Timeline {
-  constructor(events) {
-    this.events = events.map((event) => new Event({ ...event }));
-  }
+const timeline = new Timeline(timelineEvents);
 
-  addEvent(event) {
-    const lastIndex = this.events.findLastIndex(
-      (other) => other.type === event.type && other.beginsBefore(event.start)
-    );
-    if (lastIndex === -1) {
-      this.events.push(event);
-    } else {
-      this.events.splice(lastIndex + 1, 0, event);
-    }
-  }
-
-  getCurrentEvents(time) {
-    const current = [];
-    for (let type in EVENT_TYPES) {
-      const startedEventsByType = this.events.filter(
-        (seq) => seq.type === EVENT_TYPES[type] && seq.hasStarted(time)
-      );
-      if (startedEventsByType.length > 0) {
-        current.push(startedEventsByType[startedEventsByType.length - 1]);
-      }
-    }
-    return current;
-  }
-}
-
+/*
 const timeline = new Timeline([
   { id: "palette-1", type: 1, start: 0, params: { index: 8 } },
   {
@@ -323,67 +303,8 @@ const timeline = new Timeline([
     params: { stretch: 0, time: 7000 },
   },
 ]);
-
-/*
-const timeline = new Timeline([
-  { id: "palette-1", type: 1, start: 0, params: { index: 8 } },
-  { id: "grid-1", type: 2, start: 0, params: { texture: 1 } },
-  { id: "texture-grid-3", type: 2, start: 31971.708, params: { texture: 2 } },
-  {
-    id: "texture-stripes-4",
-    type: 2,
-    start: 65155.21400000001,
-    params: { texture: 1 },
-  },
-  { id: "texture-grid-5", type: 2, start: 97338.01, params: { texture: 2 } },
-  {
-    id: "texture-stripes-6",
-    type: 2,
-    start: 113604.776,
-    params: { texture: 1 },
-  },
-  {
-    id: "texture-grid-7",
-    type: 2,
-    start: 129771.54500000001,
-    params: { texture: 2 },
-  },
-  {
-    id: "texture-stripes-8",
-    type: 2,
-    start: 146221.637,
-    params: { texture: 1 },
-  },
-  { id: "texture-grid-9", type: 2, start: 154671.299, params: { texture: 2 } },
-  {
-    id: "texture-stripes-10",
-    type: 2,
-    start: 162755.058,
-    params: { texture: 1 },
-  },
-  { id: "texture-grid-11", type: 2, start: 166854.894, params: { texture: 2 } },
-  {
-    id: "texture-stripes-12",
-    type: 2,
-    start: 171021.394,
-    params: { texture: 1 },
-  },
-  { id: "texture-grid-13", type: 2, start: 178887.746, params: { texture: 2 } },
-  {
-    id: "texture-stripes-14",
-    type: 2,
-    start: 187304.825,
-    params: { texture: 1 },
-  },
-  { id: "texture-grid-15", type: 2, start: 192421.287, params: { texture: 2 } },
-  {
-    id: "texture-stripes-16",
-    type: 2,
-    start: 197987.731,
-    params: { texture: 1 },
-  },
-]);
 */
+
 /*
 const timeline = new Timeline([
   {
@@ -432,7 +353,7 @@ const timeline = {
     const current = [];
     for (let type in EVENT_TYPES) {
       const startedEventsByType = this.events.filter(
-        (seq) => seq.type === EVENT_TYPES[type] && seq.hasStarted(time)
+        (event) => event.type === EVENT_TYPES[type] && event.hasStarted(time)
       );
       if (startedEventsByType.length > 0) {
         current.push(startedEventsByType[startedEventsByType.length - 1]);
@@ -533,252 +454,6 @@ class StripeGenerator {
     }
   }
 }
-
-const palette1 = [
-  [255, 0, 0],
-  [32, 32, 32],
-  [32, 32, 64],
-
-  [0, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-];
-const gridPalette1 = [
-  [128, 128, 128],
-  [128, 128, 128],
-  [128, 128, 128],
-  [255, 128, 128],
-
-  /*
-  [96, 96, 110],
-  [96, 96, 110],
-  [96, 96, 110],
-  [255, 128, 128],
-  */
-];
-gridPalette1.noise = [32, 32, 32];
-gridPalette1.accent = [255, 32, 32];
-gridPalette1.bg = [0, 0, 0, 1];
-
-const palette2 = [
-  [255, 128, 0],
-  [0, 0, 0],
-  [255, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-];
-const gridPalette2 = [
-  [96, 32, 32],
-  [128, 32, 32],
-  [255, 128, 32],
-  [128, 32, 32],
-  [96, 32, 32],
-  [32, 32, 32],
-  [32, 32, 32],
-  [32, 32, 32],
-  [32, 32, 32],
-];
-gridPalette2.accent = [255, 225, 32];
-gridPalette2.noise = [128, 32, 32];
-
-const palette3 = [
-  [0, 64, 250],
-  [0, 16, 32],
-  [0, 32, 32],
-  [0, 0, 32],
-
-  [0, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-];
-
-const gridPalette3 = [[0, 0, 0]];
-gridPalette3.accent = [255, 16, 16];
-gridPalette3.noise = [32, 32, 255];
-/*
-const gridPalette3 = [
-  [0, 32, 150],
-  [0, 32, 200],
-  [0, 64, 255],
-  [0, 32, 200],
-  [0, 32, 150],
-  [0, 16, 100],
-  [0, 16, 50],
-  [0, 16, 16],
-  [0, 16, 50],
-  [0, 16, 100],
-];
-gridPalette3.accent = [0, 16, 16];
-//gridPalette3.noise = [16, 64, 16];
-*/
-
-const palette4 = [
-  [0, 0, 0],
-  [255, 32, 0],
-  [0, 32, 255],
-
-  [0, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-];
-const gridPalette4 = [[32, 32, 255]];
-gridPalette4.accent = [255, 32, 32];
-gridPalette4.bg = [0, 0, 0, 0.3];
-
-const palette5 = [
-  [255, 255, 255],
-  [0, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-];
-const gridPalette5 = [
-  [255, 255, 255],
-  [64, 64, 64],
-  [32, 32, 32],
-  [64, 64, 64],
-  [255, 255, 255],
-  [16, 16, 16],
-  [255, 255, 255],
-  [16, 16, 16],
-];
-//gridPalette4.bg = [32, 32, 32, 0.3];
-
-const palette6 = [
-  [255, 128, 0],
-  [0, 128, 255],
-  [128, 64, 128],
-  [0, 0, 0],
-  [0, 0, 0],
-];
-const gridPalette6 = [[32, 32, 255]];
-gridPalette6.noise = [32, 128, 200];
-gridPalette6.accent = [255, 128, 32];
-
-const palette7 = [
-  [255, 255, 255],
-  [0, 0, 0],
-];
-const gridPalette7 = [[255, 255, 255]];
-gridPalette7.noise = [255, 255, 255];
-gridPalette7.accent = [0, 0, 0];
-
-const palette8 = [
-  [0, 255, 0],
-  [0, 128, 100],
-  [0, 0, 0],
-];
-const gridPalette8 = [
-  /*
-  [0, 255, 0],
-  [0, 128, 0],
-  [0, 64, 0],
-  [0, 32, 0],
-  [0, 64, 0],
-  [0, 128, 0],*/
-  [0, 32, 0],
-  [0, 32, 0],
-  [0, 32, 0],
-  [0, 32, 0],
-  [0, 32, 0],
-  [0, 32, 0],
-  [0, 32, 0],
-  [0, 32, 0],
-  [0, 255, 255],
-];
-gridPalette8.accent = [0, 255, 255];
-gridPalette8.noise = [0, 140, 64];
-gridPalette8.bg = [0, 128, 0, 1];
-
-const palette9 = [
-  [255, 0, 255],
-  [0, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-  [0, 0, 0],
-];
-const gridPalette9 = [
-  [255, 32, 255],
-  [32, 32, 32],
-];
-
-/*
-const palette10 = [
-  [0, 0, 0],
-  [255, 32, 32],
-  [32, 255, 255],
-];
-const gridPalette10 = [[0, 0, 0]];
-gridPalette10.accent = [32, 255, 255];
-gridPalette10.noise = [32, 32, 32];
-*/
-const palette10 = [
-  [0, 0, 0],
-  [255, 32, 32],
-  [32, 255, 255],
-];
-const gridPalette10 = [
-  [0, 28, 70],
-  [0, 28, 70],
-  [0, 28, 70],
-  [0, 28, 70],
-  [128, 255, 255],
-  [0, 28, 70],
-  [0, 28, 70],
-  [0, 28, 70],
-  [0, 28, 70],
-  [255, 28, 128],
-];
-gridPalette10.bg = [0, 128, 170, 0.4];
-gridPalette10.accent = [255, 255, 255];
-//gridPalette10.noise = [32, 32, 32];
-
-const stripePalettes = [
-  palette1,
-  palette2,
-  palette3,
-  palette4,
-  palette5,
-  palette6,
-  palette7,
-  palette8,
-  palette9,
-  palette10,
-];
-
-const gridPalettes = [
-  gridPalette1,
-  gridPalette2,
-  gridPalette3,
-  gridPalette4,
-  gridPalette5,
-  gridPalette6,
-  gridPalette7,
-  gridPalette8,
-  gridPalette9,
-  gridPalette10,
-];
 
 //const stripePalettes = [palette9];
 
@@ -1002,13 +677,16 @@ function main() {
   //let then = 0;
   const debugTimeElement = document.getElementById("debug-time");
   const debugOutputElement = document.getElementById("debug-output");
-  const seqOutputElement = document.getElementById("debug-seq");
+  const eventOutputElement = document.getElementById("debug-event");
+  const audio = document.getElementById("music");
 
   //let stretchEnded = 0;
   //let lastReportedTime = 0;
 
   function render(now) {
+    //now = audio.currentTime * 1000;
     now -= startTime;
+    //console.log(audio.currentTime);
     /*
     if (reportTime) {
       console.log(`${Math.floor(now)},${lastReportedTime}`);
@@ -1041,7 +719,9 @@ function main() {
 
     const currentEvents = timeline.getCurrentEvents(now);
 
-    seqOutputElement.textContent = currentEvents.map((seq) => seq.id).join(",");
+    eventOutputElement.textContent = currentEvents
+      .map((event) => event.id)
+      .join(",");
 
     if (eventToBeAdded) {
       timeline.addEvent(new Event({ ...eventToBeAdded, start: now }));
@@ -1049,33 +729,41 @@ function main() {
     }
 
     let paletteIndex = 0;
+    let hit = false;
     //let gridColors = gridPalettes[0];
 
     let stretchTarget = 0;
     let stretchTime = 0;
     let stretchStart = 0;
 
-    currentEvents.forEach((seq) => {
-      switch (seq.type) {
+    currentEvents.forEach((event) => {
+      switch (event.type) {
         case EVENT_TYPES.PALETTE:
-          paletteIndex = seq.params.index;
-          debugOutputElement.textContent = seq.params.index;
+          paletteIndex = event.params.index;
+          debugOutputElement.textContent = event.params.index;
+          break;
+        case EVENT_TYPES.HIT:
+          if (now - event.start < 100) {
+            hit = true;
+          }
           break;
         case EVENT_TYPES.TEXTURE:
-          switch (seq.params.texture) {
+          switch (event.params.texture) {
             case TEXTURES.STRIPES:
               generateStripesToCanvas(
                 noiseCanvas1,
                 stripes,
                 now,
-                stripePalettes[paletteIndex]
+                stripePalettes[paletteIndex],
+                hit
               );
               break;
             case TEXTURES.GRID:
               generateGridToCanvas(
                 noiseCanvas1,
                 gridPalettes[paletteIndex],
-                now
+                now,
+                hit
               );
               break;
             default:
@@ -1083,9 +771,9 @@ function main() {
           }
           break;
         case EVENT_TYPES.STRETCH:
-          stretchStart = seq.start;
-          stretchTarget = seq.params.stretch;
-          stretchTime = seq.params.time;
+          stretchStart = event.start;
+          stretchTarget = event.params.stretch;
+          stretchTime = event.params.time;
           break;
         default:
           break;
@@ -1184,7 +872,9 @@ function drawScene(
     modelViewMatrix, // destination matrix
     modelViewMatrix, // matrix to translate
     [
-      0.0 + Math.cos(now * 0.0005) * 0.15,
+      0.0 +
+        Math.cos(now * 0.0005) * 0.15 +
+        Math.cos(now * 0.005) * 0.15 * Math.sin(now * 0.0001) * 0.15,
       0.0 + Math.sin(now * 0.0001) * 0.15,
       0.0, // + Math.sin(now * 0.001) * 1.0,
     ]
@@ -1358,4 +1048,8 @@ function easeInOutQuart(x) {
 
 function easeOutCirc(x) {
   return Math.sqrt(1 - Math.pow(x - 1, 2));
+}
+
+function easeOutCubic(x) {
+  return 1.0 - Math.pow(1.0 - x, 3.0);
 }

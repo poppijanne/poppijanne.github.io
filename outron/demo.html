@@ -7,7 +7,10 @@
       integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
       crossorigin="anonymous"
     ></script>
+    <script src="./timeline.js"></script>
+    <script src="./palette.js"></script>
     <script src="./webgl.js"></script>
+
     <script src="./demo.js"></script>
     <script id="vertex-shader-2d" type="x-shader/x-vertex">
 
@@ -41,13 +44,36 @@
       uniform sampler2D uSampler2;
       uniform float uTime;
 
+      mediump float easeInOutExpo(mediump float x) {
+        return x == 0.0
+          ? 0.0
+          : x == 1.0
+          ? 1.0
+          : x < 0.5 ? pow(2.0, 20.0 * x - 10.0) / 2.0
+          : (2.0 - pow(2.0, -20.0 * x + 10.0)) / 2.0;
+      }
+
+      mediump float easeOutCubic(mediump float x) {
+        return 1.0 - pow(1.0 - x, 3.0);
+      }
+
+      float colorCorrectionFactor(vec3 color) {
+        return easeOutCubic((color.r + color.g + color.b) / 3.0);
+      }
+
       void main() {
         gl_FragColor = texture2D(uSampler, vTextureCoord);
         gl_FragColor.a *= texture2D(uSampler2, vTextureCoord).a;
+
         //gl_FragColor.a *= 1.0-min(1.0,max(0.0,(vZ-12.0)));
+
         gl_FragColor.a *= min(1.0,max(0.0,(vZ+12.00)*0.09));
+        //gl_FragColor.rgb *= min(1.0,2.5-easeOutCubic((vZ+12.00)/6.00));
+
         //gl_FragColor.a = min(1.0,max(0.0,1.5+vZ*0.120));
         //gl_FragColor.a *= min(1.0,max(0.0,(abs(vZ*vZ)-12.0)*0.001));
+        //gl_FragColor.a *= easeOutCubic(gl_FragColor.a);
+        //gl_FragColor.rgb *= colorCorrectionFactor(gl_FragColor.rgb);
       }
     </script>
     <style>
@@ -93,7 +119,7 @@
         z-index: 2;
         width: 70vw;
         height: calc(70vw * 0.25);
-        mix-blend-mode: color-dodge;
+        /*mix-blend-mode: color-dodge;*/
         opacity: 0.1;
         /*
         width: 1308px;
@@ -101,11 +127,21 @@
         */
       }
 
+      #vignette {
+        position: absolute;
+        left: 0;
+        height: 0;
+        z-index: 3;
+        width: 100vw;
+        height: 100vh;
+        box-shadow: inset 0px, 0px, 10em #000;
+      }
+
       #info {
         position: absolute;
         left: 0;
         height: 0;
-        z-index: 2;
+        z-index: 4;
         width: 100vw;
         height: 100vh;
         display: flex;
@@ -145,13 +181,13 @@
           background-color: #ffffff;
         }
         25% {
-          background-color: #ff15cc;
+          background-color: #fb78df;
         }
         50% {
           background-color: #6ffaff;
         }
         75% {
-          background-color: #ff0000;
+          background-color: #fb4343;
         }
         100% {
           background-color: #ffffff;
@@ -378,19 +414,23 @@
         </g>
       </svg>
     </section>
+    <section id="vignette"></section>
     <section id="info" onclick="play()">
       <div class="info-item">CLICK TO PLAY</div>
     </section>
 
     <section id="debug">
       <div>now: <span id="debug-time"></span></div>
-      <div>seq: <span id="debug-seq"></span></div>
+      <div>events: <span id="debug-event"></span></div>
       <div><span id="debug-output"></span></div>
     </section>
     <audio id="music" src="OUTRON_42_00.mp3"></audio>
   </body>
   <script>
+    //document.getElementById("info").style.display = "none";
+    //document.getElementById("outron").style.opacity = 1.0;
     //main();
+
     let demoPlaying = false;
     function play() {
       if (!demoPlaying) {
@@ -409,6 +449,7 @@
           });
       }
     }
+
     /*
     let playAttempt = setInterval(() => {
       const audio = document.getElementById("music");

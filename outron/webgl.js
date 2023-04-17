@@ -148,9 +148,9 @@ function createAmbientLightTexture(gl, width = 32, height = 32) {
   canvas.height = height;
   const context = canvas.getContext("2d");
 
-  for (let x = 0; x < canvas.width; x++) {
-    for (let y = 0; y < canvas.height; y++) {
-      /*
+  //for (let x = 0; x < canvas.width; x++) {
+  for (let y = 0; y < canvas.height; y++) {
+    /*
       const value = Math.min(
         1.0,
         Math.max(
@@ -158,14 +158,14 @@ function createAmbientLightTexture(gl, width = 32, height = 32) {
           1 - (easeOutCirc((y * 2) / canvas.height) * x) / canvas.width
         )
       );*/
-      const value = Math.min(
-        1.0,
-        Math.max(0, 1.75 - easeOutCirc((y * 2) / canvas.height))
-      );
-      context.fillStyle = `rgba(0,0,0,${value})`;
-      context.fillRect(x, y, 1, 1);
-    }
+    const value = Math.min(
+      1.0,
+      Math.max(0, 1.75 - easeOutCirc((y * 2) / canvas.height))
+    );
+    context.fillStyle = `rgba(0,0,0,${value})`;
+    context.fillRect(0, y, canvas.width, 1);
   }
+  //}
   /*
   const blurCanvas = document.createElement("canvas");
   blurCanvas.width = width;
@@ -229,7 +229,7 @@ function generateNoiseToCanvas(canvas) {
   }
 }
 
-function generateStripesToCanvas(canvas, stripes, now, palette) {
+function generateStripesToCanvas(canvas, stripes, now, palette, hit) {
   const context = canvas.getContext("2d");
 
   //context.globalAlpha = 1.0;
@@ -245,15 +245,15 @@ function generateStripesToCanvas(canvas, stripes, now, palette) {
     )
   );
 
-  if (Math.sin(now * 0.001) < -0.999) {
-    const color = palette[Math.floor(now * 0.0001) % palette.length];
+  if (hit) {
+    const color = palette.hit;
     //const color = palette[Math.floor(Math.random() * palette.length)];
     //const color = palette[0];
     //context.fillStyle = `rgb(${color[0]},${color[1]},${color[2]})`;
     //context.fillRect(canvas.width - 2, 0, canvas.width - 2, canvas.height);
     stripes.forEach((stripe) => {
       stripe.color = color; //[255, 255, 255];
-      stripe.width = 1;
+      //stripe.width = 1;
     });
   }
 }
@@ -261,7 +261,7 @@ function generateStripesToCanvas(canvas, stripes, now, palette) {
 let gridCounter = 0;
 let gridLightY = -1;
 
-function generateGridToCanvas(canvas, palette, now) {
+function generateGridToCanvas(canvas, palette, now, hit) {
   if (gridLightY === -1) {
     gridLightY = Math.floor(canvas.height / 2);
   }
@@ -278,7 +278,11 @@ function generateGridToCanvas(canvas, palette, now) {
   //const color = palette[0];
   const fillStyle = `rgb(${color[0]},${color[1]},${color[2]})`;
 
-  if ((gridCounter + 8) % 16 === 0) {
+  if (hit) {
+    //context.fillStyle = `rgb(${palette.hit[0]},${palette.hit[1]},${palette.hit[2]})`;
+    context.fillStyle = `rgb(${palette.hit[0]},${palette.hit[1]},${palette.hit[2]})`;
+    context.fillRect(canvas.width - 1, 0, 1, canvas.height);
+  } else if ((gridCounter + 8) % 16 === 0) {
     context.fillStyle = fillStyle;
     context.fillRect(canvas.width - 1, 0, 1, canvas.height);
 
