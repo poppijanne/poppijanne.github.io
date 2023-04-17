@@ -102,6 +102,12 @@ const timelineEvents = [
     start: 187304.825,
     params: { texture: 1 },
   },
+  {
+    id: "texture-grid-147",
+    type: 2,
+    start: 191326.497,
+    params: { texture: 2 },
+  },
   { id: "texture-grid-15", type: 2, start: 192421.287, params: { texture: 2 } },
   {
     id: "texture-stripes-16",

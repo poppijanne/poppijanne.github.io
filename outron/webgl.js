@@ -288,7 +288,9 @@ function generateGridToCanvas(canvas, palette, now, hit) {
 
     if (palette.accent) {
       const oldGridLightY = gridLightY;
-      gridLightY = Math.floor((Math.random() * canvas.height) / step) * step;
+      if (Math.random() < 0.75) {
+        gridLightY = Math.floor((Math.random() * canvas.height) / step) * step;
+      }
       context.fillStyle = `rgb(${palette.accent[0]},${palette.accent[1]},${palette.accent[2]})`;
       context.fillRect(
         canvas.width - 1,

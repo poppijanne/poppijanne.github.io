@@ -400,6 +400,15 @@ class StripeGenerator {
       this.canvas.height
     );
 
+    this.context.fillStyle = `rgb(0,0,0)`;
+    this.context.fillRect(this.canvas.width - this.steps - 1, 0, this.steps, 1);
+    this.context.fillRect(
+      this.canvas.width - this.steps - 1,
+      this.canvas.height - 1,
+      this.steps,
+      1
+    );
+
     context.globalAlpha = alpha;
     context.drawImage(this.canvas, 0, this.y + Math.random() * jitter);
     //context.drawImage(this.canvas, 0, this.y + Math.random());
@@ -477,7 +486,7 @@ function main() {
   let y = 0;
   startTime = Date.now() - loadTime;
   while (y < textureHeight) {
-    const height = Math.ceil(Math.random() * (textureHeight / 32));
+    const height = Math.max(4, Math.ceil(Math.random() * (textureHeight / 32)));
     stripes.push(
       new StripeGenerator({
         y,
