@@ -150,7 +150,7 @@ class Event {
   }
 }
 
-const timeline = new Timeline(timelineEvents);
+let timeline = new Timeline(timelineEvents);
 
 /*
 const timeline = new Timeline([
@@ -485,6 +485,24 @@ function play() {
 function main() {
   let y = 0;
   startTime = Date.now() - loadTime;
+
+  if (document.getElementById("programming-enabled").checked === false) {
+    timeline = new Timeline([
+      {
+        id: "palette-1",
+        type: EVENT_TYPES.PALETTE,
+        start: 0,
+        params: { index: 0 },
+      },
+      {
+        id: "texture-stripes-1",
+        type: EVENT_TYPES.TEXTURE,
+        start: 0,
+        params: { texture: TEXTURES.STRIPES },
+      },
+    ]);
+  }
+
   while (y < textureHeight) {
     const height = Math.max(4, Math.ceil(Math.random() * (textureHeight / 32)));
     stripes.push(

@@ -87,7 +87,7 @@
         flex-direction: row;
         justify-content: center;
         align-items: center;
-        background-color: #f00;
+        background-color: rgb(0, 0, 0);
       }
 
       .bg-color-shifter {
@@ -104,15 +104,7 @@
         left: 0;
         top: 0;
         z-index: 1;
-      }
-      #title {
-        font-size: 5em;
-        color: rgba(255, 255, 255, 1);
-        z-index: 2;
-        letter-spacing: 2ch;
-        opacity: 0;
-        animation: fade-in-fade-out 20s;
-        animation-timing-function: ease-in-out;
+        cursor: none;
       }
 
       #outron {
@@ -127,14 +119,27 @@
         */
       }
 
+      #title {
+        z-index: 2;
+        width: 70vw;
+        height: calc(70vw * 0.25);
+        opacity: 1;
+        display: none;
+        /*mix-blend-mode: screen;*/
+        /*
+        width: 1308px;
+        height: 326px;
+        */
+      }
+
       #vignette {
         position: absolute;
         left: 0;
-        height: 0;
+        top: 0;
         z-index: 3;
         width: 100vw;
         height: 100vh;
-        box-shadow: inset 0px 0px 10em #000;
+        box-shadow: inset 0px 0px 10em #002;
       }
 
       #info {
@@ -148,16 +153,51 @@
         flex-direction: row;
         justify-content: center;
         align-items: center;
-        cursor: pointer;
       }
 
       .info-item {
         font-family: Verdana, Geneva, Tahoma, sans-serif;
-        font-size: 2em;
+        font-size: 1em;
         color: #fff;
+        padding: 1em;
+        border: 2px solid #0b2a2e;
+        background-color: #041a22;
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        box-shadow: 0px 1px 2px #000000;
+      }
+
+      .info-item div {
+        padding: 0.5em;
+      }
+
+      .info-item label {
+        margin-left: 1ch;
+        color: #f00;
+        text-shadow: 0px 0px 8px #f00;
+      }
+
+      .info-item button {
+        width: 100%;
+        font-size: 2em;
+        background-color: #01353c;
+        color: #08effa;
+        padding: 0.5em 1em 0.5em 1em;
+        margin-top: 0.5em;
+        border: 1px solid #ffffff36;
+        text-shadow: 0px 0px 8px #ffffff36;
+        cursor: pointer;
+        animation: 10s infinite hue-rotation-fast;
       }
 
       .logo-animations {
+        /*animation-timing-function: ease-in-out;*/
+        animation: 5s ease-in-out 5s infinite normal blur,
+          10s ease-in-out infinite hue-rotation-fast, 10s ease-in-out 0s blur-in;
+      }
+
+      .title-animations {
         /*animation-timing-function: ease-in-out;*/
         animation: 5s ease-in-out 5s infinite normal blur,
           10s ease-in-out infinite hue-rotation-fast, 10s ease-in-out 0s blur-in;
@@ -415,9 +455,76 @@
         </g>
       </svg>
     </section>
+    <section id="title">
+      <svg
+        width="230.6mm"
+        height="73.124mm"
+        version="1.1"
+        viewBox="0 0 230.6 73.124"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <filter
+            id="filter18268"
+            x="-.028722"
+            y="-.11475"
+            width="1.0574"
+            height="1.2295"
+            color-interpolation-filters="sRGB"
+          >
+            <feGaussianBlur stdDeviation="2.4443924" />
+          </filter>
+        </defs>
+        <g
+          transform="translate(-28.551 -53.885)"
+          fill="none"
+          stroke="#f00"
+          stroke-width=".52917"
+        >
+          <g
+            filter="url(#filter18268)"
+            style="mix-blend-mode: normal"
+            aria-label="DRiFTER"
+          >
+            <path
+              d="m169.62 60.71-7.9298 7.9297v3.9651h-5.9474l-5.9474 5.9474v-5.9474h-31.72v43.614l7.9303-7.9297v-15.86h15.86l7.9298-7.9297h-23.79v-3.9651h35.685v35.685l7.9298-7.9297v-27.755h5.9474l5.9474-5.9469v5.9469h31.72v-7.9297h-43.615zm-134.81 11.895v31.72h31.72v-23.79l-7.9297-7.9297zm35.685 0v31.72h7.9297v-23.79h11.895l-11.895 11.895 27.755 27.755v-11.895l-15.86-15.86 11.895-11.895v-7.9297zm35.685 0v31.72h7.9303v-31.72zm111.02 0v31.72h7.9298v-23.79h11.895l-11.895 11.895 27.755 27.755v-11.895l-15.86-15.86 11.895-11.895v-7.9297zm-174.46 7.9297h11.895l3.9651 3.9651v11.895h-15.86zm138.77 3.9651v7.9297h31.72v-7.9297zm0 11.895v7.9297h31.72v-7.9297z"
+              fill="none"
+              stroke="#f00"
+              stroke-width=".79375"
+            />
+          </g>
+          <g aria-label="DRiFTER">
+            <path
+              d="m169.62 60.71-7.9298 7.9297v3.9651h-5.9474l-5.9474 5.9474v-5.9474h-31.72v43.614l7.9303-7.9297v-15.86h15.86l7.9298-7.9297h-23.79v-3.9651h35.685v35.685l7.9298-7.9297v-27.755h5.9474l5.9474-5.9469v5.9469h31.72v-7.9297h-43.615zm-134.81 11.895v31.72h31.72v-23.79l-7.9297-7.9297zm35.685 0v31.72h7.9297v-23.79h11.895l-11.895 11.895 27.755 27.755v-11.895l-15.86-15.86 11.895-11.895v-7.9297zm35.685 0v31.72h7.9303v-31.72zm111.02 0v31.72h7.9298v-23.79h11.895l-11.895 11.895 27.755 27.755v-11.895l-15.86-15.86 11.895-11.895v-7.9297zm-174.46 7.9297h11.895l3.9651 3.9651v11.895h-15.86zm138.77 3.9651v7.9297h31.72v-7.9297zm0 11.895v7.9297h31.72v-7.9297z"
+              fill="none"
+              stroke="#f00"
+              stroke-width=".79375"
+            />
+          </g>
+        </g>
+      </svg>
+    </section>
     <section id="vignette"></section>
-    <section id="info" onclick="play()">
-      <div class="info-item">CLICK TO PLAY</div>
+    <section id="info">
+      <form>
+        <div class="info-item">
+          <div>
+            <input id="music-enabled" type="checkbox" checked /><label
+              for="music-enabled"
+              >MUSIC</label
+            >
+          </div>
+          <div>
+            <input id="programming-enabled" type="checkbox" checked /><label
+              for="music-enabled"
+              >I JUST WANT TO WATCH</label
+            >
+          </div>
+          <div>
+            <button type="button" onclick="play()">START</button>
+          </div>
+        </div>
+      </form>
     </section>
 
     <section id="debug">
@@ -435,19 +542,26 @@
     let demoPlaying = false;
     function play() {
       if (!demoPlaying) {
-        const audio = document.getElementById("music");
-        audio
-          .play()
-          .then(() => {
-            demoPlaying = true;
-            document.getElementById("info").style.display = "none";
-            document.getElementById("outron").style.opacity = 1.0;
-            main();
-            clearInterval(playAttempt);
-          })
-          .catch((error) => {
-            console.log("Unable to play audio, User has not interacted yet.");
-          });
+        const musicEnabled = document.getElementById("music-enabled").checked;
+        if (musicEnabled) {
+          const audio = document.getElementById("music");
+          audio
+            .play()
+            .then(() => {
+              demoPlaying = true;
+              document.getElementById("info").style.display = "none";
+              document.getElementById("outron").style.opacity = 1.0;
+              main();
+              clearInterval(playAttempt);
+            })
+            .catch((error) => {
+              console.log("Unable to play audio, User has not interacted yet.");
+            });
+        } else {
+          document.getElementById("info").style.display = "none";
+          document.getElementById("outron").style.opacity = 1.0;
+          main();
+        }
       }
     }
 
