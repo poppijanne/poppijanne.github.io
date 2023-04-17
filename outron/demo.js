@@ -872,9 +872,7 @@ function drawScene(
     modelViewMatrix, // destination matrix
     modelViewMatrix, // matrix to translate
     [
-      0.0 +
-        Math.cos(now * 0.0005) * 0.15 +
-        Math.cos(now * 0.005) * 0.15 * Math.sin(now * 0.0001) * 0.15,
+      0.0 + Math.cos(now * 0.0005) * 0.15,
       0.0 + Math.sin(now * 0.0001) * 0.15,
       0.0, // + Math.sin(now * 0.001) * 1.0,
     ]
