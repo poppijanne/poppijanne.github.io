@@ -96,7 +96,7 @@
 
       .canvas-animations {
         animation: 4s infinite brightness-flicker,
-          7s infinite saturation-flicker, 24s infinite hue-rotation, 6s blur-in;
+          7s infinite saturation-flicker, 6s blur-in;
       }
 
       #webgl-canvas {
@@ -145,7 +145,7 @@
       #info {
         position: absolute;
         left: 0;
-        height: 0;
+        top: 0;
         z-index: 4;
         width: 100vw;
         height: 100vh;
@@ -153,6 +153,11 @@
         flex-direction: row;
         justify-content: center;
         align-items: center;
+        color: #f00;
+        text-shadow: 0 0 3px #f00, 0 0 7px #f00;
+        font-size: 3em;
+        animation: 10s infinite hue-rotation-fast;
+        cursor: pointer;
       }
 
       .info-item {
@@ -205,16 +210,26 @@
 
       #debug {
         position: absolute;
+        top: 2px;
         left: 2px;
-        bottom: 2px;
         z-index: 2;
         color: #fff;
         text-align: left;
+        display: none;
       }
 
       svg {
         width: 100%;
         height: 100%;
+      }
+
+      audio {
+        position: absolute;
+        bottom: 0px;
+        z-index: 10;
+        width: 100%;
+        opacity: 0.75;
+        display: none;
       }
 
       @keyframes bg-color-shift {
@@ -505,34 +520,14 @@
       </svg>
     </section>
     <section id="vignette"></section>
-    <section id="info">
-      <form>
-        <div class="info-item">
-          <div>
-            <input id="music-enabled" type="checkbox" checked /><label
-              for="music-enabled"
-              >MUSIC</label
-            >
-          </div>
-          <div>
-            <input id="programming-enabled" type="checkbox" checked /><label
-              for="music-enabled"
-              >I JUST WANT TO WATCH</label
-            >
-          </div>
-          <div>
-            <button type="button" onclick="play()">START</button>
-          </div>
-        </div>
-      </form>
-    </section>
+    <section id="info" onclick="play()">CLICK TO START</section>
 
     <section id="debug">
       <div>now: <span id="debug-time"></span></div>
       <div>events: <span id="debug-event"></span></div>
       <div><span id="debug-output"></span></div>
     </section>
-    <audio id="music" src="OUTRON_42_00.mp3"></audio>
+    <audio id="music" controls src="OUTRON_42_00.mp3"></audio>
   </body>
   <script>
     //document.getElementById("info").style.display = "none";
@@ -540,43 +535,46 @@
     //main();
 
     let demoPlaying = false;
+
     function play() {
+      const url = new URL(document.location);
+      const musicEnabled = url.searchParams.get("music")
+        ? url.searchParams.get("music") === "true"
+        : true;
+      const clearEffects = url.searchParams.get("clear-effects") === "true";
+      const showDebug = url.searchParams.get("debug") === "true";
+      const showAudio = url.searchParams.get("show-audio") === "true";
+
+      if (showDebug === true) {
+        document.getElementById("debug").style.display = "block";
+      }
+
+      const audio = document.getElementById("music");
+
+      if (showAudio === true) {
+        audio.style.display = "inline-block";
+      }
+
       if (!demoPlaying) {
-        const musicEnabled = document.getElementById("music-enabled").checked;
-        if (musicEnabled) {
-          const audio = document.getElementById("music");
+        if (musicEnabled === true) {
           audio
             .play()
             .then(() => {
               demoPlaying = true;
               document.getElementById("info").style.display = "none";
               document.getElementById("outron").style.opacity = 1.0;
-              main();
-              clearInterval(playAttempt);
+              main({ musicEnabled, clearEffects, showDebug });
             })
             .catch((error) => {
-              console.log("Unable to play audio, User has not interacted yet.");
+              console.error(error);
             });
         } else {
+          demoPlaying = true;
           document.getElementById("info").style.display = "none";
           document.getElementById("outron").style.opacity = 1.0;
-          main();
+          main({ musicEnabled, clearEffects, showDebug });
         }
       }
     }
-
-    /*
-    let playAttempt = setInterval(() => {
-      const audio = document.getElementById("music");
-      audio
-        .play()
-        .then(() => {
-          main();
-          clearInterval(playAttempt);
-        })
-        .catch((error) => {
-          console.log("Unable to play audio, User has not interacted yet.");
-        });
-    }, 3000);*/
   </script>
 </html>

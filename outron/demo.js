@@ -482,11 +482,11 @@ function play() {
   audio
 }*/
 
-function main() {
+function main({ musicEnabled, clearEffects }) {
   let y = 0;
   startTime = Date.now() - loadTime;
 
-  if (document.getElementById("programming-enabled").checked === false) {
+  if (clearEffects === true) {
     timeline = new Timeline([
       {
         id: "palette-1",
@@ -710,9 +710,41 @@ function main() {
   //let stretchEnded = 0;
   //let lastReportedTime = 0;
 
+  // Tell WebGL how to pull out the positions from the position
+  // buffer into the vertexPosition attribute.
+  setPositionAttribute(gl, buffers.position, programInfo);
+
+  setTextureAttribute(gl, buffers.textureCoord, programInfo);
+
+  // Tell WebGL which indices to use to index the vertices
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
+
+  // Tell WebGL to use our program when drawing
+  gl.useProgram(programInfo.program);
+
+  /*
+  // Tell WebGL we want to affect texture unit 0
+  gl.activeTexture(gl.TEXTURE0);
+  // Bind the texture to texture unit 0
+  gl.bindTexture(gl.TEXTURE_2D, texture1);
+  // Tell the shader we bound the texture to texture unit 0
+  gl.uniform1i(programInfo.uniforms.uSampler, 0);
+
+  // Tell WebGL we want to affect shadow texture unit 1
+  gl.activeTexture(gl.TEXTURE1);
+  // Bind the texture to texture unit 1
+  gl.bindTexture(gl.TEXTURE_2D, shadowTexture);
+  // Tell the shader we bound the texture to texture unit 1
+  gl.uniform1i(programInfo.uniforms.uSampler2, 1);
+  */
+
   function render(now) {
-    //now = audio.currentTime * 1000;
-    now -= startTime;
+    if (musicEnabled === true) {
+      now = audio.currentTime * 1000;
+    } else {
+      now -= startTime;
+    }
+    //now -= startTime;
     //console.log(audio.currentTime);
     /*
     if (reportTime) {
@@ -720,105 +752,106 @@ function main() {
       reportTime = false;
       lastReportedTime = Math.floor(now);
     }*/
+    if (audio.paused !== true || !musicEnabled) {
+      //now += 10000;
+      debugTimeElement.textContent = now;
+      if (
+        window.innerWidth !== gl.canvas.width ||
+        window.innerHeight !== gl.canvas.height
+      ) {
+        gl.canvas.width = window.innerWidth;
+        gl.canvas.height = window.innerHeight;
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+      }
 
-    //now += 10000;
-    debugTimeElement.textContent = now;
-    if (
-      window.innerWidth !== gl.canvas.width ||
-      window.innerHeight !== gl.canvas.height
-    ) {
-      gl.canvas.width = window.innerWidth;
-      gl.canvas.height = window.innerHeight;
-      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-    }
-
-    //now *= 0.001; // convert to seconds
-    //deltaTime = now - then;
-    //then = now;
-    //generateNoiseToCanvas(noiseCanvas1);
-    //copyCanvasToTexture(gl, noiseCanvas1, texture1);
-    /*
+      //now *= 0.001; // convert to seconds
+      //deltaTime = now - then;
+      //then = now;
+      //generateNoiseToCanvas(noiseCanvas1);
+      //copyCanvasToTexture(gl, noiseCanvas1, texture1);
+      /*
     stripeColors =
       stripePalettes[Math.floor(now * 0.00004) % stripePalettes.length];
     const gridcolors =
       gridPalettes[Math.floor(now * 0.00004) % gridPalettes.length];
       */
 
-    const currentEvents = timeline.getCurrentEvents(now);
+      const currentEvents = timeline.getCurrentEvents(now);
 
-    eventOutputElement.textContent = currentEvents
-      .map((event) => event.id)
-      .join(",");
+      eventOutputElement.textContent = currentEvents
+        .map((event) => event.id)
+        .join(",");
 
-    if (eventToBeAdded) {
-      timeline.addEvent(new Event({ ...eventToBeAdded, start: now }));
-      eventToBeAdded = undefined;
-    }
-
-    let paletteIndex = 0;
-    let hit = false;
-    //let gridColors = gridPalettes[0];
-
-    let stretchTarget = 0;
-    let stretchTime = 0;
-    let stretchStart = 0;
-
-    currentEvents.forEach((event) => {
-      switch (event.type) {
-        case EVENT_TYPES.PALETTE:
-          paletteIndex = event.params.index;
-          debugOutputElement.textContent = event.params.index;
-          break;
-        case EVENT_TYPES.HIT:
-          if (now - event.start < 100) {
-            hit = true;
-          }
-          break;
-        case EVENT_TYPES.TEXTURE:
-          switch (event.params.texture) {
-            case TEXTURES.STRIPES:
-              generateStripesToCanvas(
-                noiseCanvas1,
-                stripes,
-                now,
-                stripePalettes[paletteIndex],
-                hit
-              );
-              break;
-            case TEXTURES.GRID:
-              generateGridToCanvas(
-                noiseCanvas1,
-                gridPalettes[paletteIndex],
-                now,
-                hit
-              );
-              break;
-            default:
-              break;
-          }
-          break;
-        case EVENT_TYPES.STRETCH:
-          stretchStart = event.start;
-          stretchTarget = event.params.stretch;
-          stretchTime = event.params.time;
-          break;
-        default:
-          break;
+      if (eventToBeAdded) {
+        timeline.addEvent(new Event({ ...eventToBeAdded, start: now }));
+        eventToBeAdded = undefined;
       }
-    });
 
-    let stretch = 0;
+      let paletteIndex = 0;
+      let hit = false;
+      //let gridColors = gridPalettes[0];
 
-    if (stretchTarget > 0) {
-      stretch =
-        easeInOutQuart(Math.min(1, (now - stretchStart) / stretchTime)) *
-        stretchTarget;
-    } else {
-      stretch =
-        8 - easeInOutQuart(Math.min(1, (now - stretchStart) / stretchTime)) * 8;
-    }
+      let stretchTarget = 0;
+      let stretchTime = 0;
+      let stretchStart = 0;
 
-    /*
+      currentEvents.forEach((event) => {
+        switch (event.type) {
+          case EVENT_TYPES.PALETTE:
+            paletteIndex = event.params.index;
+            debugOutputElement.textContent = event.params.index;
+            break;
+          case EVENT_TYPES.HIT:
+            if (now - event.start < 100) {
+              hit = true;
+            }
+            break;
+          case EVENT_TYPES.TEXTURE:
+            switch (event.params.texture) {
+              case TEXTURES.STRIPES:
+                generateStripesToCanvas(
+                  noiseCanvas1,
+                  stripes,
+                  now,
+                  stripePalettes[paletteIndex],
+                  hit
+                );
+                break;
+              case TEXTURES.GRID:
+                generateGridToCanvas(
+                  noiseCanvas1,
+                  gridPalettes[paletteIndex],
+                  now,
+                  hit
+                );
+                break;
+              default:
+                break;
+            }
+            break;
+          case EVENT_TYPES.STRETCH:
+            stretchStart = event.start;
+            stretchTarget = event.params.stretch;
+            stretchTime = event.params.time;
+            break;
+          default:
+            break;
+        }
+      });
+
+      let stretch = 0;
+
+      if (stretchTarget > 0) {
+        stretch =
+          easeInOutQuart(Math.min(1, (now - stretchStart) / stretchTime)) *
+          stretchTarget;
+      } else {
+        stretch =
+          8 -
+          easeInOutQuart(Math.min(1, (now - stretchStart) / stretchTime)) * 8;
+      }
+
+      /*
     if (shouldStretch) {
       //stretch += 0.01;
       stretchEnded = now;
@@ -832,18 +865,27 @@ function main() {
       //debugOutputElement.textContent = stretchEnded;
     }
 */
-    /*
+      /*
     if (Math.floor(now * 0.0001) % 2 === 0 || now < 50000) {
       generateStripesToCanvas(noiseCanvas1, stripes, now, stripeColors);
     } else {
       generateGridToCanvas(noiseCanvas1, gridcolors, now);
     }*/
 
-    //generateGridToCanvas(noiseCanvas1, gridcolors, now);
-    copyCanvasToTexture(gl, noiseCanvas1, texture1);
+      //generateGridToCanvas(noiseCanvas1, gridcolors, now);
+      copyCanvasToTexture(gl, noiseCanvas1, texture1);
 
-    drawScene(gl, programInfo, buffers, texture1, shadowTexture, now, stretch);
-    //rotation += deltaTime / 2;
+      drawScene(
+        gl,
+        programInfo,
+        buffers,
+        texture1,
+        shadowTexture,
+        now,
+        stretch
+      );
+      //rotation += deltaTime / 2;
+    }
     requestAnimationFrame(render);
   }
 
@@ -933,20 +975,22 @@ function drawScene(
   mat4.transpose(normalMatrix, normalMatrix);
   */
 
+  /*
   // Tell WebGL how to pull out the positions from the position
   // buffer into the vertexPosition attribute.
   setPositionAttribute(gl, buffers.position, programInfo);
 
-  //setColorAttribute(gl, buffers.color, programInfo);
-
   setTextureAttribute(gl, buffers.textureCoord, programInfo);
-  //setNormalAttribute(gl, buffers.normal, programInfo);
+
+
 
   // Tell WebGL which indices to use to index the vertices
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
 
   // Tell WebGL to use our program when drawing
   gl.useProgram(programInfo.program);
+
+*/
 
   // Set the shader uniforms
   gl.uniformMatrix4fv(
