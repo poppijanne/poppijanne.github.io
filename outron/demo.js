@@ -3,6 +3,7 @@
 let reportTime = false;
 let eventToBeAdded = undefined;
 let currentTexture = 0;
+let fps = 0;
 
 window.addEventListener("keydown", (event) => {
   console.log(event.key);
@@ -705,6 +706,7 @@ function main({ musicEnabled, clearEffects }) {
   const debugTimeElement = document.getElementById("debug-time");
   const debugOutputElement = document.getElementById("debug-output");
   const eventOutputElement = document.getElementById("debug-event");
+  const fpsOutputElement = document.getElementById("debug-fps");
   const audio = document.getElementById("music");
 
   //let stretchEnded = 0;
@@ -893,6 +895,10 @@ function main({ musicEnabled, clearEffects }) {
   glCanvas.classList.add("canvas-animations");
   document.getElementById("outron").classList.add("logo-animations");
   requestAnimationFrame(render);
+  const fpsCounter = setInterval(() => {
+    fpsOutputElement.textContent = fps;
+    fps = 0;
+  }, 1000);
 }
 
 function drawScene(
@@ -904,6 +910,7 @@ function drawScene(
   now,
   stretch
 ) {
+  fps++;
   gl.clearColor(1.0, 1.0, 1.0, 0.0); // Clear to black, fully opaque
   gl.clearDepth(1.0); // Clear everything
   gl.enable(gl.DEPTH_TEST); // Enable depth testing
