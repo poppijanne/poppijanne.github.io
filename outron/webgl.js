@@ -229,19 +229,29 @@ function generateNoiseToCanvas(canvas) {
   }
 }
 
-function generateStripesToCanvas(canvas, stripes, now, palette, hit) {
+function generateStripesToCanvas(
+  canvas,
+  stripes,
+  now,
+  palette,
+  hit,
+  delta = 1
+) {
   const context = canvas.getContext("2d");
 
   //context.globalAlpha = 1.0;
   //context.fillStyle = `rgb(0,0,0)`;
   //context.fillRect(0, 0, canvas.width, canvas.height);
 
+  delta = Math.max(1, Math.round(delta));
+
   stripes.forEach((stripe) =>
     stripe.render(
       context,
       Math.min(1.0, Math.abs(Math.sin(now * 0.00005)) + 0.3),
-      Math.abs(Math.cos(now * 0.00005)) * 0.1,
-      palette
+      Math.abs(Math.cos(now * 0.00005)) * 0.1 * delta,
+      palette,
+      delta
     )
   );
 
@@ -261,15 +271,20 @@ function generateStripesToCanvas(canvas, stripes, now, palette, hit) {
 let gridCounter = 0;
 let gridLightY = -1;
 
-function generateGridToCanvas(canvas, palette, now, hit) {
+function generateGridToCanvas(canvas, palette, now, hit, delta = 1) {
   if (gridLightY === -1) {
     gridLightY = Math.floor(canvas.height / 2);
   }
   const step = Math.floor(canvas.height / 8);
+  delta = Math.max(1, Math.round(delta));
 
   const context = canvas.getContext("2d");
-  context.globalAlpha = 0.99;
-  context.drawImage(canvas, -1, Math.random() * 0.05);
+  context.globalAlpha = 0.98;
+  context.drawImage(
+    canvas,
+    -delta,
+    0 /*(Math.random() * 0.5) / Math.min(1.0, delta)*/
+  );
   //context.drawImage(canvas, -1, 0);
   context.globalAlpha = 1.0;
   const color = palette[Math.floor(gridCounter / 16) % palette.length];
@@ -281,10 +296,10 @@ function generateGridToCanvas(canvas, palette, now, hit) {
   if (hit) {
     //context.fillStyle = `rgb(${palette.hit[0]},${palette.hit[1]},${palette.hit[2]})`;
     context.fillStyle = `rgb(${palette.hit[0]},${palette.hit[1]},${palette.hit[2]})`;
-    context.fillRect(canvas.width - 1, 0, 1, canvas.height);
+    context.fillRect(canvas.width - delta, 0, delta, canvas.height);
   } else if ((gridCounter + 8) % 16 === 0) {
     context.fillStyle = fillStyle;
-    context.fillRect(canvas.width - 1, 0, 1, canvas.height);
+    context.fillRect(canvas.width - delta, 0, delta, canvas.height);
 
     if (palette.accent) {
       const oldGridLightY = gridLightY;
@@ -293,9 +308,9 @@ function generateGridToCanvas(canvas, palette, now, hit) {
       }
       context.fillStyle = `rgb(${palette.accent[0]},${palette.accent[1]},${palette.accent[2]})`;
       context.fillRect(
-        canvas.width - 1,
+        canvas.width - delta,
         Math.min(oldGridLightY, gridLightY),
-        canvas.width - 1,
+        canvas.width - delta,
         Math.abs(gridLightY - oldGridLightY)
       );
     }
@@ -303,7 +318,7 @@ function generateGridToCanvas(canvas, palette, now, hit) {
     context.fillStyle = palette.bg
       ? `rgba(${palette.bg[0]},${palette.bg[1]},${palette.bg[2]},${palette.bg[3]})`
       : "rgb(0,0,0)";
-    context.fillRect(canvas.width - 1, 0, canvas.width - 1, canvas.height);
+    context.fillRect(canvas.width - delta, 0, delta, canvas.height);
     /*
     for (let y = 0; y < canvas.height; y += 1) {
       context.fillStyle = `rgba(0,0,0,${
@@ -315,23 +330,23 @@ function generateGridToCanvas(canvas, palette, now, hit) {
     if (palette.noise) {
       context.fillStyle = `rgb(${palette.noise[0]},${palette.noise[1]},${palette.noise[2]})`;
       context.fillRect(
-        canvas.width - 1,
+        canvas.width - delta,
         Math.random() * canvas.height,
-        1,
+        delta,
         1 + Math.random() * (canvas.height - 1)
       );
     }
 
     context.fillStyle = fillStyle;
     for (let y = 0; y < canvas.height; y += step) {
-      context.fillRect(canvas.width - 1, y - 1, 1, 3);
+      context.fillRect(canvas.width - delta, y - 1, delta, 3);
     }
 
     if (palette.accent) {
       context.fillStyle = `rgba(${palette.accent[0]},${palette.accent[1]},${palette.accent[2]},0.3)`;
-      context.fillRect(canvas.width - 1, gridLightY - 4, 1, 9);
+      context.fillRect(canvas.width - delta, gridLightY - 4, delta, 9);
       context.fillStyle = `rgb(${palette.accent[0]},${palette.accent[1]},${palette.accent[2]})`;
-      context.fillRect(canvas.width - 1, gridLightY - 2, 1, 5);
+      context.fillRect(canvas.width - delta, gridLightY - 2, delta, 5);
     }
   }
 

@@ -153,217 +153,6 @@ class Event {
 
 let timeline = new Timeline(timelineEvents);
 
-/*
-const timeline = new Timeline([
-  { id: "palette-1", type: 1, start: 0, params: { index: 8 } },
-  {
-    id: "palette-17",
-    type: 1,
-    start: 467.80200000000013,
-    params: { index: 8 },
-  },
-  { id: "palette-52", type: 1, start: 8301.713, params: { index: 4 } },
-  { id: "palette-18", type: 1, start: 16368.29, params: { index: 0 } },
-  {
-    id: "palette-19",
-    type: 1,
-    start: 32600.974000000002,
-    params: { index: 0 },
-  },
-  { id: "palette-20", type: 1, start: 40801.396, params: { index: 1 } },
-  { id: "palette-21", type: 1, start: 48901.072, params: { index: 2 } },
-  { id: "palette-22", type: 1, start: 56934.833, params: { index: 3 } },
-  { id: "palette-23", type: 1, start: 65167.837, params: { index: 5 } },
-  { id: "palette-24", type: 1, start: 82084.279, params: { index: 1 } },
-  { id: "palette-25", type: 1, start: 89534.653, params: { index: 6 } },
-  { id: "palette-26", type: 1, start: 97617.663, params: { index: 4 } },
-  { id: "palette-27", type: 1, start: 105584.76, params: { index: 9 } },
-  { id: "palette-53", type: 1, start: 109793.032, params: { index: 3 } },
-  { id: "palette-28", type: 1, start: 113917.76, params: { index: 0 } },
-  { id: "palette-54", type: 1, start: 122101.614, params: { index: 3 } },
-  { id: "palette-29", type: 1, start: 122184.096, params: { index: 5 } },
-  {
-    id: "palette-30",
-    type: 1,
-    start: 129867.87100000001,
-    params: { index: 7 },
-  },
-  { id: "palette-31", type: 1, start: 136384.277, params: { index: 6 } },
-  { id: "palette-55", type: 1, start: 140426.623, params: { index: 3 } },
-  { id: "palette-32", type: 1, start: 143533.991, params: { index: 5 } },
-  { id: "palette-33", type: 1, start: 150701.12, params: { index: 8 } },
-  { id: "palette-34", type: 1, start: 156700.88, params: { index: 9 } },
-  { id: "palette-35", type: 1, start: 160800.716, params: { index: 5 } },
-  { id: "palette-36", type: 1, start: 163817.262, params: { index: 7 } },
-  { id: "palette-37", type: 1, start: 166851.223, params: { index: 6 } },
-  { id: "palette-38", type: 1, start: 169884.435, params: { index: 3 } },
-  { id: "palette-39", type: 1, start: 173900.941, params: { index: 2 } },
-  { id: "palette-40", type: 1, start: 176984.151, params: { index: 1 } },
-  { id: "palette-41", type: 1, start: 183133.905, params: { index: 5 } },
-  { id: "palette-42", type: 1, start: 187251.155, params: { index: 7 } },
-  { id: "palette-43", type: 1, start: 191300.993, params: { index: 8 } },
-  { id: "palette-44", type: 1, start: 195367.497, params: { index: 9 } },
-  { id: "palette-56", type: 1, start: 199284.084, params: { index: 4 } },
-  { id: "palette-57", type: 1, start: 207092.846, params: { index: 8 } },
-  { id: "palette-53", type: 1, start: 212423.664, params: { index: 7 } },
-  { id: "palette-58", type: 1, start: 213709.248, params: { index: 3 } },
-  { id: "palette-54", type: 1, start: 216157.232, params: { index: 8 } },
-  { id: "palette-59", type: 1, start: 232742.561, params: { index: 3 } },
-  { id: "palette-61", type: 1, start: 242392.916, params: { index: 8 } },
-  { id: "texture-stripes-1", type: 2, start: 0, params: { texture: 1 } },
-  { id: "texture-grid-3", type: 2, start: 31971.708, params: { texture: 2 } },
-  {
-    id: "texture-stripes-4",
-    type: 2,
-    start: 65155.21400000001,
-    params: { texture: 1 },
-  },
-  { id: "texture-grid-5", type: 2, start: 97338.01, params: { texture: 2 } },
-  {
-    id: "texture-stripes-6",
-    type: 2,
-    start: 113604.776,
-    params: { texture: 1 },
-  },
-  {
-    id: "texture-grid-7",
-    type: 2,
-    start: 129771.54500000001,
-    params: { texture: 2 },
-  },
-  {
-    id: "texture-stripes-8",
-    type: 2,
-    start: 146221.637,
-    params: { texture: 1 },
-  },
-  { id: "texture-grid-9", type: 2, start: 154671.299, params: { texture: 2 } },
-  {
-    id: "texture-stripes-10",
-    type: 2,
-    start: 162755.058,
-    params: { texture: 1 },
-  },
-  { id: "texture-grid-11", type: 2, start: 166854.894, params: { texture: 2 } },
-  {
-    id: "texture-stripes-12",
-    type: 2,
-    start: 171021.394,
-    params: { texture: 1 },
-  },
-  { id: "texture-grid-13", type: 2, start: 178887.746, params: { texture: 2 } },
-  {
-    id: "texture-stripes-14",
-    type: 2,
-    start: 187304.825,
-    params: { texture: 1 },
-  },
-  { id: "texture-grid-15", type: 2, start: 192421.287, params: { texture: 2 } },
-  {
-    id: "texture-stripes-16",
-    type: 2,
-    start: 197987.731,
-    params: { texture: 1 },
-  },
-  { id: "texture-grid-52", type: 2, start: 206323.908, params: { texture: 2 } },
-  {
-    id: "texture-stripes-55",
-    type: 2,
-    start: 224474.304,
-    params: { texture: 1 },
-  },
-  { id: "texture-grid-60", type: 2, start: 235400.788, params: { texture: 2 } },
-  {
-    id: "texture-stripes-62",
-    type: 2,
-    start: 247751.035,
-    params: { texture: 1 },
-  },
-  {
-    id: "stretch-stretch-45",
-    type: 3,
-    start: 97807.839,
-    params: { stretch: 8, time: 7000 },
-  },
-  {
-    id: "texture-stretch-46",
-    type: 3,
-    start: 107957.433,
-    params: { stretch: 0, time: 7000 },
-  },
-  {
-    id: "stretch-stretch-52",
-    type: 3,
-    start: 190785.125,
-    params: { stretch: 8, time: 7000 },
-  },
-  {
-    id: "texture-stretch-63",
-    type: 3,
-    start: 253417.475,
-    params: { stretch: 0, time: 7000 },
-  },
-]);
-*/
-
-/*
-const timeline = new Timeline([
-  {
-    id: "palette-1",
-    type: EVENT_TYPES.PALETTE,
-    start: 0,
-    params: { index: 0 },
-  },
-  {
-    id: "grid-1",
-    type: EVENT_TYPES.TEXTURE,
-    start: 0,
-    params: { texture: TEXTURES.STRIPES },
-  },
-]);
-*/
-/*
-const timeline = {
-  events: [
-    //new Event("stretch-1", EVENT_TYPES.STRETCH, 65000),
-    //new Event("stretch-2", EVENT_TYPES.STRETCH, 90000),
-    //new Event("stretch-3", EVENT_TYPES.STRETCH, 110000),
-    //new Event("stretch-4", EVENT_TYPES.STRETCH, 150000),
-    new Event({
-      id: "palette-1",
-      type: EVENT_TYPES.PALETTE,
-      start: 0,
-      params: {
-        index: 0,
-      },
-    }),
-    new Event({
-      id: "stripes-1",
-      type: EVENT_TYPES.TEXTURE,
-      start: 0,
-      params: { texture: TEXTURES.STRIPES },
-    }),
-    new Event({
-      id: "grid-1",
-      type: EVENT_TYPES.TEXTURE,
-      start: 5000,
-      params: { texture: TEXTURES.GRID },
-    }),
-  ],
-  getCurrentEvents(time) {
-    const current = [];
-    for (let type in EVENT_TYPES) {
-      const startedEventsByType = this.events.filter(
-        (event) => event.type === EVENT_TYPES[type] && event.hasStarted(time)
-      );
-      if (startedEventsByType.length > 0) {
-        current.push(startedEventsByType[startedEventsByType.length - 1]);
-      }
-    }
-    return current;
-  },
-};
-*/
 class StripeGenerator {
   constructor({ height = 1, maxWidth = 1, y = 0, steps = 1, palette }) {
     this.y = y;
@@ -380,14 +169,14 @@ class StripeGenerator {
     this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
-  render(context, alpha = 1.0, jitter = 0.0, palette) {
+  render(context, alpha = 1.0, jitter = 0.0, palette, delta) {
     this.context.drawImage(
       context.canvas,
       0,
       this.y,
       this.canvas.width,
       this.canvas.height,
-      0 - this.steps,
+      0 - this.steps * delta,
       0,
       context.canvas.width,
       this.height
@@ -395,67 +184,43 @@ class StripeGenerator {
 
     this.context.fillStyle = `rgb(${this.color[0]},${this.color[1]},${this.color[2]})`;
     this.context.fillRect(
-      this.canvas.width - this.steps - 1,
+      this.canvas.width - this.steps * delta - 1,
       0,
-      this.steps,
+      this.steps * delta,
       this.canvas.height
     );
 
     this.context.fillStyle = `rgb(0,0,0)`;
-    this.context.fillRect(this.canvas.width - this.steps - 1, 0, this.steps, 1);
     this.context.fillRect(
       this.canvas.width - this.steps - 1,
+      0,
+      this.steps * delta,
+      1
+    );
+    this.context.fillRect(
+      this.canvas.width - this.steps * delta - 1,
       this.canvas.height - 1,
-      this.steps,
+      this.steps * delta,
       1
     );
 
     context.globalAlpha = alpha;
-    context.drawImage(this.canvas, 0, this.y + Math.random() * jitter);
-    //context.drawImage(this.canvas, 0, this.y + Math.random());
-    //context.drawImage(this.canvas, 0, this.y + Math.random() * 0.1);
-    context.globalAlpha = 1.0;
-
-    this.width -= this.steps;
-    if (this.width < 1) {
-      this.width = Math.ceil((Math.random() * this.maxWidth) / 3);
-      this.color = palette[Math.floor(palette.length * Math.random())];
-      this.steps = Math.ceil(Math.random() * 3);
-      //this.height = Math.ceil(Math.random() * (textureHeight / 32));
-    }
-  }
-  render2(context, alpha = 1.0, jitter = 0.0, palette) {
-    context.globalAlpha = alpha;
     context.drawImage(
-      context.canvas,
+      this.canvas,
       0,
-      this.y,
-      context.canvas.width,
-      this.height,
-      0 - this.steps,
-      this.y,
-      context.canvas.width,
-      this.height
+      this.y + (Math.random() - Math.random()) * jitter
     );
-
-    context.fillStyle = `rgb(${this.color[0]},${this.color[1]},${this.color[2]})`;
-    context.fillRect(
-      this.canvas.width - this.steps - 1,
-      this.y,
-      this.steps,
-      this.canvas.height
-    );
-
     /*
-    context.globalAlpha = alpha; //0.75;
-    context.drawImage(context.canvas, 0, this.y + Math.random() * jitter);
+    context.drawImage(
+      this.canvas,
+      0,
+      this.y - jitter //(Math.random() + Math.random()) * jitter * delta
+    );*/
     //context.drawImage(this.canvas, 0, this.y + Math.random());
     //context.drawImage(this.canvas, 0, this.y + Math.random() * 0.1);
     context.globalAlpha = 1.0;
-    */
-    context.globalAlpha = 1.0;
 
-    this.width -= this.steps;
+    this.width -= this.steps * delta;
     if (this.width < 1) {
       this.width = Math.ceil((Math.random() * this.maxWidth) / 3);
       this.color = palette[Math.floor(palette.length * Math.random())];
@@ -707,6 +472,7 @@ function main({ musicEnabled, clearEffects }) {
   const debugOutputElement = document.getElementById("debug-output");
   const eventOutputElement = document.getElementById("debug-event");
   const fpsOutputElement = document.getElementById("debug-fps");
+  const deltaOutputElement = document.getElementById("debug-delta");
   const audio = document.getElementById("music");
 
   //let stretchEnded = 0;
@@ -739,6 +505,7 @@ function main({ musicEnabled, clearEffects }) {
   // Tell the shader we bound the texture to texture unit 1
   gl.uniform1i(programInfo.uniforms.uSampler2, 1);
   */
+  let past = 0;
 
   function render(now) {
     if (musicEnabled === true) {
@@ -746,6 +513,10 @@ function main({ musicEnabled, clearEffects }) {
     } else {
       now -= startTime;
     }
+
+    const delta = (now - past) / 8.0;
+    past = now;
+
     //now -= startTime;
     //console.log(audio.currentTime);
     /*
@@ -757,6 +528,7 @@ function main({ musicEnabled, clearEffects }) {
     if (audio.paused !== true || !musicEnabled) {
       //now += 10000;
       debugTimeElement.textContent = now;
+      deltaOutputElement.textContent = delta;
       if (
         window.innerWidth !== gl.canvas.width ||
         window.innerHeight !== gl.canvas.height
@@ -816,7 +588,8 @@ function main({ musicEnabled, clearEffects }) {
                   stripes,
                   now,
                   stripePalettes[paletteIndex],
-                  hit
+                  hit,
+                  delta
                 );
                 break;
               case TEXTURES.GRID:
@@ -824,7 +597,8 @@ function main({ musicEnabled, clearEffects }) {
                   noiseCanvas1,
                   gridPalettes[paletteIndex],
                   now,
-                  hit
+                  hit,
+                  delta
                 );
                 break;
               default:
