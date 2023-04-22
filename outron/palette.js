@@ -143,7 +143,7 @@ const palette6 = [
 ];
 palette6.hit = [255, 255, 255];
 
-const gridPalette6 = [[32, 32, 255]];
+const gridPalette6 = [[32, 32, 210]];
 gridPalette6.noise = [32, 128, 200];
 gridPalette6.accent = [255, 128, 32];
 gridPalette6.hit = [255, 255, 255];

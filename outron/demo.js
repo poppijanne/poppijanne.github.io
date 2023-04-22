@@ -98,16 +98,22 @@ window.addEventListener("keydown", (event) => {
         type: EVENT_TYPES.HIT,
       };
       break;
+    case "k":
+      eventToBeAdded = {
+        id: `kick-${timeline.events.length + 1}`,
+        type: EVENT_TYPES.KICK,
+      };
+      break;
     case "z":
       eventToBeAdded = {
-        id: `stretch-stretch-${timeline.events.length + 1}`,
+        id: `stretch-grow-${timeline.events.length + 1}`,
         type: EVENT_TYPES.STRETCH,
         params: { stretch: 8, time: 7000 },
       };
       break;
     case "x":
       eventToBeAdded = {
-        id: `texture-stretch-${timeline.events.length + 1}`,
+        id: `stretch-shrink-${timeline.events.length + 1}`,
         type: EVENT_TYPES.STRETCH,
         params: { stretch: 0, time: 7000 },
       };
@@ -123,6 +129,7 @@ const loadTime = Date.now();
 
 const EVENT_TYPES = {
   HIT: 4,
+  KICK: 5,
   PALETTE: 1,
   TEXTURE: 2,
   STRETCH: 3,
@@ -132,24 +139,6 @@ const TEXTURES = {
   STRIPES: 1,
   GRID: 2,
 };
-
-class Event {
-  constructor({ id, type, start = 0, params = {} }) {
-    this.id = id;
-    this.type = type;
-    this.start = start;
-    this.params = params;
-  }
-  hasStarted(time) {
-    return this.start <= time;
-  }
-  beginsBefore(time) {
-    return this.start < time;
-  }
-  beginsAfter(time) {
-    return this.start > time;
-  }
-}
 
 let timeline = new Timeline(timelineEvents);
 
@@ -170,6 +159,7 @@ class StripeGenerator {
   }
 
   render(context, alpha = 1.0, jitter = 0.0, palette, delta) {
+    // copy target canvas to stripe canvas
     this.context.drawImage(
       context.canvas,
       0,
@@ -182,34 +172,43 @@ class StripeGenerator {
       this.height
     );
 
+    // draw rect to right edge with stripe color
     this.context.fillStyle = `rgb(${this.color[0]},${this.color[1]},${this.color[2]})`;
     this.context.fillRect(
       this.canvas.width - this.steps * delta - 1,
       0,
-      this.steps * delta,
+      this.steps * delta + 1,
       this.canvas.height
     );
 
+    // add black line on top and bottom
     this.context.fillStyle = `rgb(0,0,0)`;
     this.context.fillRect(
-      this.canvas.width - this.steps - 1,
+      this.canvas.width - this.steps * delta - 1,
       0,
-      this.steps * delta,
+      this.steps * delta + 1,
       1
     );
     this.context.fillRect(
       this.canvas.width - this.steps * delta - 1,
       this.canvas.height - 1,
-      this.steps * delta,
+      this.steps * delta + 1,
       1
     );
 
     context.globalAlpha = alpha;
+
     context.drawImage(
       this.canvas,
       0,
       this.y + (Math.random() - Math.random()) * jitter
     );
+
+    //context.drawImage(this.canvas, 0, this.y + 0.1 * jitter);
+    //context.drawImage(this.canvas, 0, this.y - 0.1 * jitter);
+
+    //context.drawImage(this.canvas, 0, this.y);
+
     /*
     context.drawImage(
       this.canvas,
@@ -291,6 +290,7 @@ function main({ musicEnabled, clearEffects }) {
   const noiseCanvas1 = document.createElement("canvas");
   noiseCanvas1.width = textureWidth;
   noiseCanvas1.height = textureHeight;
+  document.getElementById("debug-canvas").appendChild(noiseCanvas1);
 
   const vertexShaderSource = document.querySelector("#vertex-shader-2d").text;
   const fragmentShaderSource = document.querySelector(
@@ -319,6 +319,7 @@ function main({ musicEnabled, clearEffects }) {
       uSampler2: gl.getUniformLocation(program, "uSampler2"),
       uTime: gl.getUniformLocation(program, "uTime"),
       uStretch: gl.getUniformLocation(program, "uStretch"),
+      uFogDepth: gl.getUniformLocation(program, "uFogDepth"),
     },
   };
 
@@ -459,8 +460,10 @@ function main({ musicEnabled, clearEffects }) {
     ),
   };
 
-  const shadowTexture = createAmbientLightTexture(gl, 8, 64);
+  const { texture: shadowTexture, canvas: shadowCanvas } =
+    createAmbientLightTexture(gl, 8, 64);
   const texture1 = createTexture(gl, noiseCanvas1.width, noiseCanvas1.height);
+  document.getElementById("debug-canvas").appendChild(shadowCanvas);
 
   copyCanvasToTexture(gl, noiseCanvas1, texture1);
 
@@ -514,7 +517,7 @@ function main({ musicEnabled, clearEffects }) {
       now -= startTime;
     }
 
-    const delta = (now - past) / 8.0;
+    const delta = Math.max(1, Math.round((now - past) / 8.333));
     past = now;
 
     //now -= startTime;
@@ -563,6 +566,9 @@ function main({ musicEnabled, clearEffects }) {
 
       let paletteIndex = 0;
       let hit = false;
+      let kick = false;
+      let kickStart = 0;
+      const kickLength = 200;
       //let gridColors = gridPalettes[0];
 
       let stretchTarget = 0;
@@ -578,6 +584,12 @@ function main({ musicEnabled, clearEffects }) {
           case EVENT_TYPES.HIT:
             if (now - event.start < 100) {
               hit = true;
+            }
+            break;
+          case EVENT_TYPES.KICK:
+            if (now - event.start < kickLength) {
+              kick = true;
+              kickStart = event.start;
             }
             break;
           case EVENT_TYPES.TEXTURE:
@@ -651,16 +663,19 @@ function main({ musicEnabled, clearEffects }) {
       //generateGridToCanvas(noiseCanvas1, gridcolors, now);
       copyCanvasToTexture(gl, noiseCanvas1, texture1);
 
-      drawScene(
+      drawScene({
         gl,
         programInfo,
         buffers,
-        texture1,
+        texture: texture1,
         shadowTexture,
         now,
-        stretch
-      );
-      //rotation += deltaTime / 2;
+        stretch,
+        x: 0,
+        y: 0,
+        z: 0,
+        fogDepth: kick ? 12.0 - (kickLength - (now - kickStart)) / 100 : 12.0,
+      });
     }
     requestAnimationFrame(render);
   }
@@ -675,15 +690,19 @@ function main({ musicEnabled, clearEffects }) {
   }, 1000);
 }
 
-function drawScene(
+function drawScene({
   gl,
   programInfo,
   buffers,
   texture,
   shadowTexture,
   now,
-  stretch
-) {
+  stretch,
+  x,
+  y,
+  z,
+  fogDepth,
+}) {
   fps++;
   gl.clearColor(1.0, 1.0, 1.0, 0.0); // Clear to black, fully opaque
   gl.clearDepth(1.0); // Clear everything
@@ -722,9 +741,9 @@ function drawScene(
     modelViewMatrix, // destination matrix
     modelViewMatrix, // matrix to translate
     [
-      0.0 + Math.cos(now * 0.0005) * 0.15,
-      0.0 + Math.sin(now * 0.0001) * 0.15,
-      0.0, // + Math.sin(now * 0.001) * 1.0,
+      x + Math.cos(now * 0.0005) * 0.15,
+      y + Math.sin(now * 0.0001) * 0.15,
+      z, // + Math.sin(now * 0.001) * 1.0,
     ]
   ); // amount to translate
 
@@ -788,6 +807,7 @@ function drawScene(
 
   gl.uniform1f(programInfo.uniforms.uTime, now * 0.0001);
   gl.uniform1f(programInfo.uniforms.uStretch, stretch);
+  gl.uniform1f(programInfo.uniforms.uFogDepth, fogDepth);
 
   // Tell WebGL we want to affect texture unit 0
   gl.activeTexture(gl.TEXTURE0);

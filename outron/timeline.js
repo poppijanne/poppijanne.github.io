@@ -1,246 +1,8 @@
-const timelineEvents = [
-  { id: "palette-1", type: 1, start: 0, params: { index: 8 } },
-  {
-    id: "palette-17",
-    type: 1,
-    start: 467.80200000000013,
-    params: { index: 8 },
-  },
-  { id: "palette-52", type: 1, start: 8301.713, params: { index: 4 } },
-  { id: "palette-18", type: 1, start: 16368.29, params: { index: 0 } },
-  {
-    id: "palette-19",
-    type: 1,
-    start: 32600.974000000002,
-    params: { index: 0 },
-  },
-  { id: "palette-20", type: 1, start: 40801.396, params: { index: 1 } },
-  { id: "palette-21", type: 1, start: 48901.072, params: { index: 2 } },
-  { id: "palette-22", type: 1, start: 56934.833, params: { index: 3 } },
-  { id: "palette-23", type: 1, start: 65167.837, params: { index: 5 } },
-  { id: "palette-24", type: 1, start: 82084.279, params: { index: 1 } },
-  { id: "palette-25", type: 1, start: 89534.653, params: { index: 6 } },
-  { id: "palette-26", type: 1, start: 97617.663, params: { index: 4 } },
-  { id: "palette-27", type: 1, start: 105584.76, params: { index: 9 } },
-  { id: "palette-53", type: 1, start: 109793.032, params: { index: 3 } },
-  { id: "palette-28", type: 1, start: 113917.76, params: { index: 0 } },
-  { id: "palette-54", type: 1, start: 122101.614, params: { index: 3 } },
-  { id: "palette-29", type: 1, start: 122184.096, params: { index: 5 } },
-  {
-    id: "palette-30",
-    type: 1,
-    start: 129867.87100000001,
-    params: { index: 7 },
-  },
-  { id: "palette-31", type: 1, start: 136384.277, params: { index: 6 } },
-  { id: "palette-55", type: 1, start: 140426.623, params: { index: 3 } },
-  { id: "palette-32", type: 1, start: 143533.991, params: { index: 5 } },
-  { id: "palette-33", type: 1, start: 150701.12, params: { index: 8 } },
-  { id: "palette-34", type: 1, start: 156700.88, params: { index: 9 } },
-  { id: "palette-35", type: 1, start: 160800.716, params: { index: 5 } },
-  { id: "palette-36", type: 1, start: 163817.262, params: { index: 7 } },
-  { id: "palette-37", type: 1, start: 166851.223, params: { index: 6 } },
-  { id: "palette-38", type: 1, start: 169884.435, params: { index: 3 } },
-  { id: "palette-39", type: 1, start: 173900.941, params: { index: 2 } },
-  { id: "palette-40", type: 1, start: 176984.151, params: { index: 1 } },
-  { id: "palette-41", type: 1, start: 183133.905, params: { index: 5 } },
-  { id: "palette-42", type: 1, start: 187251.155, params: { index: 7 } },
-  { id: "palette-43", type: 1, start: 191300.993, params: { index: 8 } },
-  { id: "palette-44", type: 1, start: 195367.497, params: { index: 9 } },
-  { id: "palette-56", type: 1, start: 199284.084, params: { index: 4 } },
-  { id: "palette-57", type: 1, start: 207092.846, params: { index: 8 } },
-  { id: "palette-53", type: 1, start: 212423.664, params: { index: 7 } },
-  { id: "palette-58", type: 1, start: 213709.248, params: { index: 3 } },
-  { id: "palette-54", type: 1, start: 216157.232, params: { index: 8 } },
-  { id: "palette-59", type: 1, start: 232742.561, params: { index: 3 } },
-  { id: "palette-61", type: 1, start: 242392.916, params: { index: 8 } },
-  { id: "texture-stripes-1", type: 2, start: 0, params: { texture: 1 } },
-  { id: "texture-grid-3", type: 2, start: 31971.708, params: { texture: 2 } },
-  {
-    id: "texture-stripes-4",
-    type: 2,
-    start: 65155.21400000001,
-    params: { texture: 1 },
-  },
-  { id: "texture-grid-5", type: 2, start: 97338.01, params: { texture: 2 } },
-  {
-    id: "texture-stripes-6",
-    type: 2,
-    start: 113604.776,
-    params: { texture: 1 },
-  },
-  {
-    id: "texture-grid-7",
-    type: 2,
-    start: 129771.54500000001,
-    params: { texture: 2 },
-  },
-  {
-    id: "texture-stripes-8",
-    type: 2,
-    start: 146221.637,
-    params: { texture: 1 },
-  },
-  { id: "texture-grid-9", type: 2, start: 154671.299, params: { texture: 2 } },
-  {
-    id: "texture-stripes-10",
-    type: 2,
-    start: 162755.058,
-    params: { texture: 1 },
-  },
-  { id: "texture-grid-11", type: 2, start: 166854.894, params: { texture: 2 } },
-  {
-    id: "texture-stripes-12",
-    type: 2,
-    start: 171021.394,
-    params: { texture: 1 },
-  },
-  { id: "texture-grid-13", type: 2, start: 178887.746, params: { texture: 2 } },
-  {
-    id: "texture-stripes-14",
-    type: 2,
-    start: 187304.825,
-    params: { texture: 1 },
-  },
-  {
-    id: "texture-grid-147",
-    type: 2,
-    start: 191326.497,
-    params: { texture: 2 },
-  },
-  { id: "texture-grid-15", type: 2, start: 192421.287, params: { texture: 2 } },
-  {
-    id: "texture-stripes-16",
-    type: 2,
-    start: 197987.731,
-    params: { texture: 1 },
-  },
-  { id: "texture-grid-52", type: 2, start: 206323.908, params: { texture: 2 } },
-  {
-    id: "texture-stripes-55",
-    type: 2,
-    start: 224474.304,
-    params: { texture: 1 },
-  },
-  { id: "texture-grid-60", type: 2, start: 235400.788, params: { texture: 2 } },
-  {
-    id: "texture-stripes-62",
-    type: 2,
-    start: 247751.035,
-    params: { texture: 1 },
-  },
-  {
-    id: "stretch-stretch-45",
-    type: 3,
-    start: 97807.839,
-    params: { stretch: 8, time: 7000 },
-  },
-  {
-    id: "texture-stretch-46",
-    type: 3,
-    start: 107957.433,
-    params: { stretch: 0, time: 7000 },
-  },
-  {
-    id: "stretch-stretch-52",
-    type: 3,
-    start: 190785.125,
-    params: { stretch: 8, time: 7000 },
-  },
-  {
-    id: "texture-stretch-63",
-    type: 3,
-    start: 253417.475,
-    params: { stretch: 0, time: 7000 },
-  },
-  { id: "hit-64", type: 4, start: 16379.621, params: {} },
-  { id: "hit-65", type: 4, start: 19412.833, params: {} },
-  { id: "hit-66", type: 4, start: 23546.001, params: {} },
-  { id: "hit-67", type: 4, start: 27587.506, params: {} },
-  { id: "hit-68", type: 4, start: 31720.674, params: {} },
-  { id: "hit-69", type: 4, start: 35729.592, params: {} },
-  { id: "hit-70", type: 4, start: 39896.092, params: {} },
-  { id: "hit-71", type: 4, start: 43820.935, params: {} },
-  { id: "hit-72", type: 4, start: 47962.436, params: {} },
-  { id: "hit-73", type: 4, start: 51953.943, params: {} },
-  { id: "hit-74", type: 4, start: 56021.189, params: {} },
-  { id: "hit-75", type: 4, start: 60104.359, params: {} },
-  { id: "hit-76", type: 4, start: 64195.862, params: {} },
-  { id: "hit-139", type: 4, start: 64517.96000000001, params: {} },
-  { id: "hit-77", type: 4, start: 68154.037, params: {} },
-  { id: "hit-78", type: 4, start: 72295.538, params: {} },
-  { id: "hit-79", type: 4, start: 76346.116, params: {} },
-  { id: "hit-80", type: 4, start: 80404.287, params: {} },
-  { id: "hit-140", type: 4, start: 80750.644, params: {} },
-  { id: "hit-81", type: 4, start: 84479.124, params: {} },
-  { id: "hit-82", type: 4, start: 88545.628, params: {} },
-  { id: "hit-83", type: 4, start: 92645.464, params: {} },
-  { id: "hit-84", type: 4, start: 96779.376, params: {} },
-  { id: "hit-141", type: 4, start: 97159.071, params: {} },
-  { id: "hit-85", type: 4, start: 97646.008, params: {} },
-  { id: "hit-86", type: 4, start: 100820.881, params: {} },
-  { id: "hit-87", type: 4, start: 104870.719, params: {} },
-  { id: "hit-88", type: 4, start: 108912.224, params: {} },
-  { id: "hit-89", type: 4, start: 113021.136, params: {} },
-  { id: "hit-142", type: 4, start: 113359.174, params: {} },
-  { id: "hit-90", type: 4, start: 117037.642, params: {} },
-  { id: "hit-91", type: 4, start: 121179.143, params: {} },
-  { id: "hit-92", type: 4, start: 125162.317, params: {} },
-  { id: "hit-93", type: 4, start: 129370.482, params: {} },
-  { id: "hit-143", type: 4, start: 129642.603, params: {} },
-  { id: "hit-144", type: 4, start: 130167.582, params: {} },
-  { id: "hit-94", type: 4, start: 131303.738, params: {} },
-  { id: "hit-95", type: 4, start: 133287.737, params: {} },
-  { id: "hit-96", type: 4, start: 135287.657, params: {} },
-  { id: "hit-97", type: 4, start: 137362.574, params: {} },
-  { id: "hit-98", type: 4, start: 139404.159, params: {} },
-  { id: "hit-99", type: 4, start: 141437.411, params: {} },
-  { id: "hit-100", type: 4, start: 143437.331, params: {} },
-  { id: "hit-101", type: 4, start: 145478.916, params: {} },
-  { id: "hit-145", type: 4, start: 145909.364, params: {} },
-  { id: "hit-102", type: 4, start: 147545.5, params: {} },
-  { id: "hit-103", type: 4, start: 149553.753, params: {} },
-  { id: "hit-104", type: 4, start: 151537.007, params: {} },
-  { id: "hit-105", type: 4, start: 153662.667, params: {} },
-  { id: "hit-106", type: 4, start: 155670.92, params: {} },
-  { id: "hit-107", type: 4, start: 157695.839, params: {} },
-  { id: "hit-108", type: 4, start: 159737.424, params: {} },
-  { id: "hit-109", type: 4, start: 161829.007, params: {} },
-  { id: "hit-146", type: 4, start: 162183.713, params: {} },
-  { id: "hit-110", type: 4, start: 162870.632, params: {} },
-  { id: "hit-111", type: 4, start: 163887.258, params: {} },
-  { id: "hit-112", type: 4, start: 165837.18, params: {} },
-  { id: "hit-113", type: 4, start: 167878.765, params: {} },
-  { id: "hit-114", type: 4, start: 169970.348, params: {} },
-  { id: "hit-115", type: 4, start: 171928.603, params: {} },
-  { id: "hit-116", type: 4, start: 173962.604, params: {} },
-  { id: "hit-117", type: 4, start: 176062.52, params: {} },
-  { id: "hit-118", type: 4, start: 177629.124, params: {} },
-  { id: "hit-119", type: 4, start: 178162.436, params: {} },
-  { id: "hit-120", type: 4, start: 178329.096, params: {} },
-  { id: "hit-121", type: 4, start: 178737.413, params: {} },
-  { id: "hit-122", type: 4, start: 178879.074, params: {} },
-  { id: "hit-123", type: 4, start: 179262.392, params: {} },
-  { id: "hit-124", type: 4, start: 180154.023, params: {} },
-  { id: "hit-125", type: 4, start: 182137.277, params: {} },
-  { id: "hit-126", type: 4, start: 184137.197, params: {} },
-  { id: "hit-127", type: 4, start: 186128.784, params: {} },
-  { id: "hit-128", type: 4, start: 188228.7, params: {} },
-  { id: "hit-129", type: 4, start: 190270.285, params: {} },
-  { id: "hit-130", type: 4, start: 192345.202, params: {} },
-  { id: "hit-131", type: 4, start: 193362.577, params: {} },
-  { id: "hit-132", type: 4, start: 193520.904, params: {} },
-  { id: "hit-133", type: 4, start: 193970.886, params: {} },
-  { id: "hit-134", type: 4, start: 194470.866, params: {} },
-  { id: "hit-135", type: 4, start: 194654.192, params: {} },
-  { id: "hit-136", type: 4, start: 194904.182, params: {} },
-  { id: "hit-137", type: 4, start: 195062.509, params: {} },
-  { id: "hit-138", type: 4, start: 195495.825, params: {} },
-];
-
 class Timeline {
   constructor(events) {
-    this.events = events.map((event) => new Event({ ...event }));
+    this.events = events
+      .sort((event1, event2) => event1.start - event2.start)
+      .map((event) => new Event({ ...event }));
   }
 
   addEvent(event) {
@@ -265,5 +27,23 @@ class Timeline {
       }
     }
     return current;
+  }
+}
+
+class Event {
+  constructor({ id, type, start = 0, params = {} }) {
+    this.id = id;
+    this.type = type;
+    this.start = start;
+    this.params = params;
+  }
+  hasStarted(time) {
+    return this.start <= time;
+  }
+  beginsBefore(time) {
+    return this.start < time;
+  }
+  beginsAfter(time) {
+    return this.start > time;
   }
 }
