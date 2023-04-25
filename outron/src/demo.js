@@ -381,6 +381,9 @@ function main({ musicEnabled, clearEffects, showDebug }) {
   const fpsOutputElement = document.getElementById("debug-fps");
   const deltaOutputElement = document.getElementById("debug-delta");
   const audio = document.getElementById("music");
+  const bodyElement = document.querySelector("body");
+
+  bodyElement.style.height = window.innerHeight + "px";
 
   //let stretchEnded = 0;
   //let lastReportedTime = 0;
@@ -446,6 +449,7 @@ function main({ musicEnabled, clearEffects, showDebug }) {
         window.innerWidth !== gl.canvas.width ||
         window.innerHeight !== gl.canvas.height
       ) {
+        bodyElement.style.height = window.innerHeight + "px";
         gl.canvas.width = window.innerWidth;
         gl.canvas.height = window.innerHeight;
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
@@ -581,7 +585,9 @@ function main({ musicEnabled, clearEffects, showDebug }) {
         x: 0,
         y: 0,
         z: 0,
-        fogDepth: kick ? 12.0 - (kickLength - (now - kickStart)) / 100 : 12.0,
+        fogDepth: kick
+          ? -STAGE_DEPTH - (kickLength - (now - kickStart)) / 100
+          : -STAGE_DEPTH,
         //bgColor: hsvToRgb((Math.floor(now * 0.1) % 100) / 100, 1.0, 1.0),
         bgColor,
       });
@@ -657,7 +663,7 @@ function drawScene({
     [
       x + Math.cos(now * 0.0005) * 0.15,
       y + Math.sin(now * 0.0001) * 0.15,
-      z, // + Math.sin(now * 0.001) * 1.0,
+      z + 2.0 + Math.sin(now * 0.0005) * 2.0,
     ]
   ); // amount to translate
 

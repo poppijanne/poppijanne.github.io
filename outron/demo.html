@@ -47,8 +47,9 @@
       uniform vec4 uFogColor;
 
       void main() {
-        float fog = min(1.0,max(0.0,(vZ+uFogDepth)*0.099));
+        float fog = min(1.0,max(0.0,(vZ+uFogDepth)/15.0));
         gl_FragColor = (texture2D(uSampler, vTextureCoord)+0.1) * fog + uFogColor * (1.0 - fog);
+        //gl_FragColor = texture2D(uSampler, vTextureCoord);
       }
     </script>
     <script></script>

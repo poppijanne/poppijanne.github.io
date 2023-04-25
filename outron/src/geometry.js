@@ -1,4 +1,4 @@
-const STAGE_DEPTH = -12.0;
+const STAGE_DEPTH = -20.0;
 let STAGE_WIDTH = 2.0;
 
 const geometry = {
