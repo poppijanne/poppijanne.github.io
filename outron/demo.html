@@ -7,12 +7,12 @@
       integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
       crossorigin="anonymous"
     ></script>
-    <script src="./timeline.js"></script>
-    <script src="./events.js"></script>
-    <script src="./palette.js"></script>
-    <script src="./webgl.js"></script>
-
-    <script src="./demo.js"></script>
+    <script src="./src/timeline.js"></script>
+    <script src="./src/events.js"></script>
+    <script src="./src/palette.js"></script>
+    <script src="./src/webgl.js"></script>
+    <script src="./src/geometry.js"></script>
+    <script src="./src/demo.js"></script>
     <script id="vertex-shader-2d" type="x-shader/x-vertex">
 
       attribute vec4 aVertexPosition;
@@ -42,52 +42,26 @@
       varying highp float vZ;
 
       uniform sampler2D uSampler;
-      uniform sampler2D uSampler2;
       uniform float uTime;
       uniform float uFogDepth;
-
-      mediump float easeInOutExpo(mediump float x) {
-        return x == 0.0
-          ? 0.0
-          : x == 1.0
-          ? 1.0
-          : x < 0.5 ? pow(2.0, 20.0 * x - 10.0) / 2.0
-          : (2.0 - pow(2.0, -20.0 * x + 10.0)) / 2.0;
-      }
-
-      mediump float easeOutCubic(mediump float x) {
-        return 1.0 - pow(1.0 - x, 3.0);
-      }
-
-      float colorCorrectionFactor(vec3 color) {
-        return easeOutCubic((color.r + color.g + color.b) / 3.0);
-      }
+      uniform vec4 uFogColor;
 
       void main() {
-        gl_FragColor = texture2D(uSampler, vTextureCoord);
-        gl_FragColor.a *= texture2D(uSampler2, vTextureCoord).a;
-
-        //gl_FragColor.a *= 1.0-min(1.0,max(0.0,(vZ-12.0)));
-
-        gl_FragColor.a *= min(1.0,max(0.0,(vZ+uFogDepth)*0.09));
-        //gl_FragColor.rgb *= min(1.0,2.5-easeOutCubic((vZ+12.00)/6.00));
-
-        //gl_FragColor.a = min(1.0,max(0.0,1.5+vZ*0.120));
-        //gl_FragColor.a *= min(1.0,max(0.0,(abs(vZ*vZ)-12.0)*0.001));
-        //gl_FragColor.a *= easeOutCubic(gl_FragColor.a);
-        //gl_FragColor.rgb *= colorCorrectionFactor(gl_FragColor.rgb);
+        float fog = min(1.0,max(0.0,(vZ+uFogDepth)*0.099));
+        gl_FragColor = (texture2D(uSampler, vTextureCoord)+0.1) * fog + uFogColor * (1.0 - fog);
       }
     </script>
+    <script></script>
     <link rel="stylesheet" href="demo.css" />
   </head>
   <body>
     <canvas id="webgl-canvas" width="480" height="480"></canvas>
     <!--<section id="title">RADIATION</section>-->
     <section id="outron">
-      <image src="outron.svg" />
+      <image src="./img/outron.svg" />
     </section>
     <section id="title">
-      <image src="title.svg" />
+      <image src="./img/title.svg" />
     </section>
     <section id="vignette"></section>
     <section id="info" onclick="play()">CLICK TO START</section>
@@ -99,9 +73,16 @@
       <div>delta: <span id="debug-delta"></span></div>
       <div><span id="debug-output"></span></div>
       <div id="debug-canvas"></div>
+      <div id="debug-light-color-buttons"></div>
     </section>
 
-    <audio id="music" controls src="OUTRON_42_00.mp3"></audio>
+    <section id="debug-events">
+      <table>
+        <tbody id="debug-events-table-body"></tbody>
+      </table>
+    </section>
+
+    <audio id="music" controls src="./audio/OUTRON_42_00.mp3"></audio>
   </body>
   <script>
     let demoPlaying = false;
@@ -117,6 +98,8 @@
 
       if (showDebug === true) {
         document.getElementById("debug").style.display = "block";
+        document.getElementById("debug-events").style.display = "block";
+        renderLightPaletteButtons();
       }
 
       const audio = document.getElementById("music");
@@ -145,6 +128,95 @@
           main({ musicEnabled, clearEffects, showDebug });
         }
       }
+    }
+
+    function renderLightPaletteButtons() {
+      const lightPaletteButtonsElement = document.getElementById(
+        "debug-light-color-buttons"
+      );
+      for (let i = 0; i < lightPalette.length; i++) {
+        const buttonElement = document.createElement("button");
+        buttonElement.type = "button";
+        buttonElement.style.backgroundColor = `rgb(${
+          lightPalette[i][0] * 255
+        },${lightPalette[i][1] * 255},${lightPalette[i][2] * 255})`;
+
+        buttonElement.onclick = (event) => {
+          console.log(lightPalette[i]);
+          eventToBeAdded = {
+            id: `light-color-${
+              timeline.getEventsByType(EVENT_TYPES.LIGHT_COLOR).length + 1
+            }`,
+            type: EVENT_TYPES.LIGHT_COLOR,
+            params: { index: i },
+          };
+        };
+        lightPaletteButtonsElement.appendChild(buttonElement);
+      }
+    }
+
+    function renderEvents(timeline) {
+      const elementsTableBodyElement = document.getElementById(
+        "debug-events-table-body"
+      );
+      elementsTableBodyElement.innerHTML = "";
+      timeline.events.forEach((event, index) => {
+        const eventRowElement = document.createElement("tr");
+        eventRowElement.id = event.id + "row";
+
+        const eventStartCellElement = document.createElement("td");
+        eventStartCellElement.textContent = Math.floor(event.start);
+        eventRowElement.appendChild(eventStartCellElement);
+
+        const eventIdCellElement = document.createElement("td");
+        eventIdCellElement.textContent = event.id;
+        eventRowElement.appendChild(eventIdCellElement);
+
+        const eventTypeCellElement = document.createElement("td");
+        eventTypeCellElement.textContent = EVENT_TYPES.toString(event.type);
+        eventRowElement.appendChild(eventTypeCellElement);
+
+        const eventParamsCellElement = document.createElement("td");
+        eventParamsCellElement.style.width = "5px";
+        switch (event.type) {
+          case EVENT_TYPES.LIGHT_COLOR: {
+            const color = lightPalette[event.params.index];
+            eventParamsCellElement.style.backgroundColor = `rgb(${
+              color[0] * 255
+            },${color[1] * 255},${color[2] * 255})`;
+          }
+        }
+        eventRowElement.appendChild(eventParamsCellElement);
+
+        const eventRemoveCellElement = document.createElement("td");
+        eventRemoveCellElement.className = "remove-event";
+        eventRemoveCellElement.textContent = "x";
+        eventRemoveCellElement.onclick = (e) => {
+          timeline.removeEventById(event.id);
+          document.getElementById(event.id + "row").remove();
+        };
+        eventRowElement.appendChild(eventRemoveCellElement);
+
+        elementsTableBodyElement.appendChild(eventRowElement);
+      });
+    }
+
+    let previousCurrentEventElements = [];
+
+    function updateEvents(timeline, now) {
+      previousCurrentEventElements.forEach((element) => {
+        element.className = "";
+      });
+
+      previousCurrentElements = [];
+
+      const currentEvents = timeline.getCurrentEvents(now);
+
+      currentEvents.forEach((event) => {
+        const currentEventElement = document.getElementById(event.id + "row");
+        currentEventElement.className = "current";
+        previousCurrentEventElements.push(currentEventElement);
+      });
     }
   </script>
 </html>

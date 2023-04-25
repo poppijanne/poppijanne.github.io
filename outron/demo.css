@@ -139,6 +139,43 @@ body {
   display: none;
 }
 
+#debug-light-color-buttons button {
+  width: 20px;
+  height: 20px;
+}
+
+#debug-events {
+  position: absolute;
+  right: 2px;
+  top: 2px;
+  z-index: 5;
+  color: #fff;
+  height: 80vh;
+  overflow-y: scroll;
+  font-size: 0.8em;
+  /* border: 1px solid #0c0c0c; */
+  font-family: system-ui;
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 0.5em;
+  display: none;
+}
+
+#debug-events tr {
+  color: #888;
+}
+
+#debug-events tr.current {
+  color: #fff;
+}
+
+#debug-events tr td.remove-event {
+  cursor: pointer;
+  border: 1px px solid #302f2f;
+  background-color: #000;
+  text-align: center;
+  padding: 1px 6px 3px 6px;
+}
+
 svg {
   width: 100%;
   height: 100%;

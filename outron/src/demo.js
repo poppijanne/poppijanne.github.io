@@ -10,112 +10,158 @@ window.addEventListener("keydown", (event) => {
   switch (event.key) {
     case "0":
       eventToBeAdded = {
-        id: `palette-${timeline.events.length + 1}`,
+        id: `palette-${
+          timeline.getEventsByType(EVENT_TYPES.PALETTE).length + 1
+        }`,
         type: EVENT_TYPES.PALETTE,
         params: { index: 0 },
       };
       break;
     case "1":
       eventToBeAdded = {
-        id: `palette-${timeline.events.length + 1}`,
+        id: `palette-${
+          timeline.getEventsByType(EVENT_TYPES.PALETTE).length + 1
+        }`,
         type: EVENT_TYPES.PALETTE,
         params: { index: 1 },
       };
       break;
     case "2":
       eventToBeAdded = {
-        id: `palette-${timeline.events.length + 1}`,
+        id: `palette-${
+          timeline.getEventsByType(EVENT_TYPES.PALETTE).length + 1
+        }`,
         type: EVENT_TYPES.PALETTE,
         params: { index: 2 },
       };
       break;
     case "3":
       eventToBeAdded = {
-        id: `palette-${timeline.events.length + 1}`,
+        id: `palette-${
+          timeline.getEventsByType(EVENT_TYPES.PALETTE).length + 1
+        }`,
         type: EVENT_TYPES.PALETTE,
         params: { index: 3 },
       };
       break;
     case "4":
       eventToBeAdded = {
-        id: `palette-${timeline.events.length + 1}`,
+        id: `palette-${
+          timeline.getEventsByType(EVENT_TYPES.PALETTE).length + 1
+        }`,
         type: EVENT_TYPES.PALETTE,
         params: { index: 4 },
       };
       break;
     case "5":
       eventToBeAdded = {
-        id: `palette-${timeline.events.length + 1}`,
+        id: `palette-${
+          timeline.getEventsByType(EVENT_TYPES.PALETTE).length + 1
+        }`,
         type: EVENT_TYPES.PALETTE,
         params: { index: 5 },
       };
       break;
     case "6":
       eventToBeAdded = {
-        id: `palette-${timeline.events.length + 1}`,
+        id: `palette-${
+          timeline.getEventsByType(EVENT_TYPES.PALETTE).length + 1
+        }`,
         type: EVENT_TYPES.PALETTE,
         params: { index: 6 },
       };
       break;
     case "7":
       eventToBeAdded = {
-        id: `palette-${timeline.events.length + 1}`,
+        id: `palette-${
+          timeline.getEventsByType(EVENT_TYPES.PALETTE).length + 1
+        }`,
         type: EVENT_TYPES.PALETTE,
         params: { index: 7 },
       };
       break;
     case "8":
       eventToBeAdded = {
-        id: `palette-${timeline.events.length + 1}`,
+        id: `palette-${
+          timeline.getEventsByType(EVENT_TYPES.PALETTE).length + 1
+        }`,
         type: EVENT_TYPES.PALETTE,
         params: { index: 8 },
       };
       break;
     case "9":
       eventToBeAdded = {
-        id: `palette-${timeline.events.length + 1}`,
+        id: `palette-${
+          timeline.getEventsByType(EVENT_TYPES.PALETTE).length + 1
+        }`,
         type: EVENT_TYPES.PALETTE,
         params: { index: 9 },
       };
       break;
     case "s":
       eventToBeAdded = {
-        id: `texture-stripes-${timeline.events.length + 1}`,
+        id: `texture-stripes-${
+          timeline.getEventsByType(EVENT_TYPES.TEXTURE).length + 1
+        }`,
         type: EVENT_TYPES.TEXTURE,
         params: { texture: TEXTURES.STRIPES },
       };
       break;
     case "g":
       eventToBeAdded = {
-        id: `texture-grid-${timeline.events.length + 1}`,
+        id: `texture-grid-${
+          timeline.getEventsByType(EVENT_TYPES.TEXTURE).length + 1
+        }`,
         type: EVENT_TYPES.TEXTURE,
         params: { texture: TEXTURES.GRID },
       };
       break;
     case "h":
       eventToBeAdded = {
-        id: `hit-${timeline.events.length + 1}`,
+        id: `hit-${timeline.getEventsByType(EVENT_TYPES.HIT).length + 1}`,
         type: EVENT_TYPES.HIT,
       };
       break;
     case "k":
       eventToBeAdded = {
-        id: `kick-${timeline.events.length + 1}`,
+        id: `kick-${timeline.getEventsByType(EVENT_TYPES.KICK).length + 1}`,
         type: EVENT_TYPES.KICK,
       };
       break;
     case "z":
       eventToBeAdded = {
-        id: `stretch-grow-${timeline.events.length + 1}`,
+        id: `stretch-grow-${
+          timeline.getEventsByType(EVENT_TYPES.STRETCH).length + 1
+        }`,
         type: EVENT_TYPES.STRETCH,
         params: { stretch: 8, time: 7000 },
       };
       break;
     case "x":
       eventToBeAdded = {
-        id: `stretch-shrink-${timeline.events.length + 1}`,
+        id: `stretch-shrink-${
+          timeline.getEventsByType(EVENT_TYPES.STRETCH).length + 1
+        }`,
         type: EVENT_TYPES.STRETCH,
         params: { stretch: 0, time: 7000 },
+      };
+      break;
+    case "r":
+      eventToBeAdded = {
+        id: `light-color-red-${
+          timeline.getEventsByType(EVENT_TYPES.LIGHT_COLOR).length + 1
+        }`,
+        type: EVENT_TYPES.LIGHT_COLOR,
+        params: { color: [1.0, 0.0, 0.0, 1.0] },
+      };
+      break;
+    case "b":
+      eventToBeAdded = {
+        id: `light-color-blue-${
+          timeline.getEventsByType(EVENT_TYPES.LIGHT_COLOR).length + 1
+        }`,
+        type: EVENT_TYPES.LIGHT_COLOR,
+        params: { color: [0.0, 0.0, 1.0, 1.0] },
       };
       break;
     case "t":
@@ -126,14 +172,6 @@ window.addEventListener("keydown", (event) => {
 });
 
 const loadTime = Date.now();
-
-const EVENT_TYPES = {
-  HIT: 4,
-  KICK: 5,
-  PALETTE: 1,
-  TEXTURE: 2,
-  STRETCH: 3,
-};
 
 const TEXTURES = {
   STRIPES: 1,
@@ -229,25 +267,14 @@ class StripeGenerator {
   }
 }
 
-//const stripePalettes = [palette9];
-
-//let stripeColors = stripePalettes[0];
-
 const stripes = [];
 
 const textureWidth = 128;
 const textureHeight = 256 * 2;
 //let stretch = 0.0;
 let startTime = 0;
-/*
-function play() {
-  console.log("play");
-  const audio = document.getElementById("music");
-  audio.play();
-  audio
-}*/
 
-function main({ musicEnabled, clearEffects }) {
+function main({ musicEnabled, clearEffects, showDebug }) {
   let y = 0;
   startTime = Date.now() - loadTime;
 
@@ -256,6 +283,12 @@ function main({ musicEnabled, clearEffects }) {
       {
         id: "palette-1",
         type: EVENT_TYPES.PALETTE,
+        start: 0,
+        params: { index: 0 },
+      },
+      {
+        id: "light-color-1",
+        type: EVENT_TYPES.LIGHT_COLOR,
         start: 0,
         params: { index: 0 },
       },
@@ -316,152 +349,23 @@ function main({ musicEnabled, clearEffects }) {
       projectionMatrix: gl.getUniformLocation(program, "uProjectionMatrix"),
       modelViewMatrix: gl.getUniformLocation(program, "uModelViewMatrix"),
       uSampler: gl.getUniformLocation(program, "uSampler"),
-      uSampler2: gl.getUniformLocation(program, "uSampler2"),
+      //uSampler2: gl.getUniformLocation(program, "uSampler2"),
       uTime: gl.getUniformLocation(program, "uTime"),
       uStretch: gl.getUniformLocation(program, "uStretch"),
       uFogDepth: gl.getUniformLocation(program, "uFogDepth"),
+      uFogColor: gl.getUniformLocation(program, "uFogColor"),
     },
   };
 
-  const depth = -11.9;
-  let width = 2.0;
-
   const buffers = {
-    position: createBuffer(gl, [
-      // Left wall
-      -width / 2,
-      -1.0,
-      2.0,
-      -width / 2,
-      -1.0,
-      depth,
-      -width / 2,
-      1.0,
-      depth,
-      -width / 2,
-      1.0,
-      2.0,
-      // Right wall
-      width / 2,
-      -1.0,
-      depth,
-      width / 2,
-      -1.0,
-      2.0,
-      width / 2,
-      1.0,
-      2.0,
-      width / 2,
-      1.0,
-      depth,
-      // Floor
-      -width / 2,
-      -1.0,
-      2.0,
-      width / 2,
-      -1.0,
-      2.0,
-      width / 2,
-      -1.0,
-      depth,
-      -width / 2,
-      -1.0,
-      depth,
-      // Ceiling
-      -width / 2,
-      1.0,
-      depth,
-      width / 2,
-      1.0,
-      depth,
-      width / 2,
-      1.0,
-      2.0,
-      -width / 2,
-      1.0,
-      2.0,
-      // back
-
-      -width / 2,
-      -1.0,
-      depth,
-      width / 2,
-      -1.0,
-      depth,
-      width / 2,
-      1.0,
-      depth,
-      -width / 2,
-      1.0,
-      depth,
-
-      /*
-      -width * 5,
-      -3.0,
-      depth - 1.0,
-      width * 5,
-      -3.0,
-      depth - 1.0,
-      width * 5,
-      3.0,
-      depth - 1.0,
-      -width * 5,
-      3.0,
-      depth - 1.0,
-      */
-    ]),
+    position: createBuffer(gl, geometry.stage.vertices),
     //color: createBuffer(gl, colors),
-    indices: createIndexBuffer(gl, [
-      0,
-      1,
-      2,
-      0,
-      2,
-      3, // left
-      4,
-      5,
-      6,
-      4,
-      6,
-      7, // right
-      8,
-      9,
-      10,
-      8,
-      10,
-      11, // floor
-      12,
-      13,
-      14,
-      12,
-      14,
-      15, // ceiling
-      16,
-      17,
-      18,
-      16,
-      18,
-      19, // back
-    ]),
-    textureCoord: createBuffer(
-      gl,
-      [
-        // Left wall
-        0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
-        // Right wall
-        1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0,
-        // Floor
-        0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0,
-        // Ceiling
-        1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
-        // back
-        0.5, 0.5, 0.51, 0.5, 0.51, 0.51, 0.5, 0.51,
-      ]
-    ),
+    indices: createIndexBuffer(gl, geometry.stage.indices),
+    textureCoord: createBuffer(gl, geometry.stage.textureCoord),
   };
 
   const { texture: shadowTexture, canvas: shadowCanvas } =
-    createAmbientLightTexture(gl, 8, 64);
+    createAmbientLightTexture(gl, 16, 64);
   const texture1 = createTexture(gl, noiseCanvas1.width, noiseCanvas1.height);
   document.getElementById("debug-canvas").appendChild(shadowCanvas);
 
@@ -509,6 +413,12 @@ function main({ musicEnabled, clearEffects }) {
   gl.uniform1i(programInfo.uniforms.uSampler2, 1);
   */
   let past = 0;
+  let bgColor = [1, 1, 1, 1];
+  //let stretch = 0;
+
+  if (showDebug) {
+    renderEvents(timeline, 0);
+  }
 
   function render(now) {
     if (musicEnabled === true) {
@@ -530,7 +440,7 @@ function main({ musicEnabled, clearEffects }) {
     }*/
     if (audio.paused !== true || !musicEnabled) {
       //now += 10000;
-      debugTimeElement.textContent = now;
+      debugTimeElement.textContent = Math.floor(now);
       deltaOutputElement.textContent = delta;
       if (
         window.innerWidth !== gl.canvas.width ||
@@ -562,6 +472,7 @@ function main({ musicEnabled, clearEffects }) {
       if (eventToBeAdded) {
         timeline.addEvent(new Event({ ...eventToBeAdded, start: now }));
         eventToBeAdded = undefined;
+        renderEvents(timeline);
       }
 
       let paletteIndex = 0;
@@ -622,6 +533,12 @@ function main({ musicEnabled, clearEffects }) {
             stretchTarget = event.params.stretch;
             stretchTime = event.params.time;
             break;
+          case EVENT_TYPES.LIGHT_COLOR:
+            const targetColor = lightPalette[event.params.index];
+            bgColor[0] = (bgColor[0] * 99 + targetColor[0]) / 100;
+            bgColor[1] = (bgColor[1] * 99 + targetColor[1]) / 100;
+            bgColor[2] = (bgColor[2] * 99 + targetColor[2]) / 100;
+            break;
           default:
             break;
         }
@@ -638,21 +555,11 @@ function main({ musicEnabled, clearEffects }) {
           8 -
           easeInOutQuart(Math.min(1, (now - stretchStart) / stretchTime)) * 8;
       }
-
       /*
-    if (shouldStretch) {
-      //stretch += 0.01;
-      stretchEnded = now;
-      debugOutputElement.textContent = stretchEnded;
-      if (stretch < 8) {
-        stretch = easeInOutQuart((now - stretchStart) / stretchLength) * 8.0;
-      }
-    } else if (stretch > 0) {
-      stretch = (stretch - 0.01) * 0.99;
-      //stretch = (1.0 - easeInOutQuart((now - stretchEnded) / 10000)) * 8.0;
-      //debugOutputElement.textContent = stretchEnded;
-    }
-*/
+      if (stretch !== stretchTarget) {
+        stretch = (stretch * 99 + stretchTarget) / 100;
+      }*/
+
       /*
     if (Math.floor(now * 0.0001) % 2 === 0 || now < 50000) {
       generateStripesToCanvas(noiseCanvas1, stripes, now, stripeColors);
@@ -675,12 +582,18 @@ function main({ musicEnabled, clearEffects }) {
         y: 0,
         z: 0,
         fogDepth: kick ? 12.0 - (kickLength - (now - kickStart)) / 100 : 12.0,
+        //bgColor: hsvToRgb((Math.floor(now * 0.1) % 100) / 100, 1.0, 1.0),
+        bgColor,
       });
+
+      if (showDebug) {
+        updateEvents(timeline, now);
+      }
     }
     requestAnimationFrame(render);
   }
 
-  document.querySelector("body").classList.add("bg-color-shifter");
+  //document.querySelector("body").classList.add("bg-color-shifter");
   glCanvas.classList.add("canvas-animations");
   document.getElementById("outron").classList.add("logo-animations");
   requestAnimationFrame(render);
@@ -702,9 +615,10 @@ function drawScene({
   y,
   z,
   fogDepth,
+  bgColor,
 }) {
   fps++;
-  gl.clearColor(1.0, 1.0, 1.0, 0.0); // Clear to black, fully opaque
+  gl.clearColor(bgColor[0], bgColor[1], bgColor[2], 1.0); // Clear to black, fully opaque
   gl.clearDepth(1.0); // Clear everything
   gl.enable(gl.DEPTH_TEST); // Enable depth testing
   gl.depthFunc(gl.LEQUAL); // Near things obscure far things
@@ -808,6 +722,7 @@ function drawScene({
   gl.uniform1f(programInfo.uniforms.uTime, now * 0.0001);
   gl.uniform1f(programInfo.uniforms.uStretch, stretch);
   gl.uniform1f(programInfo.uniforms.uFogDepth, fogDepth);
+  gl.uniform4fv(programInfo.uniforms.uFogColor, bgColor);
 
   // Tell WebGL we want to affect texture unit 0
   gl.activeTexture(gl.TEXTURE0);
@@ -816,15 +731,16 @@ function drawScene({
   // Tell the shader we bound the texture to texture unit 0
   gl.uniform1i(programInfo.uniforms.uSampler, 0);
 
+  /*
   // Tell WebGL we want to affect shadow texture unit 1
   gl.activeTexture(gl.TEXTURE1);
   // Bind the texture to texture unit 1
   gl.bindTexture(gl.TEXTURE_2D, shadowTexture);
   // Tell the shader we bound the texture to texture unit 1
   gl.uniform1i(programInfo.uniforms.uSampler2, 1);
-
+*/
   {
-    const vertexCount = 5 * 6;
+    const vertexCount = 4 * 6;
     const type = gl.UNSIGNED_SHORT;
     const offset = 0;
     gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);

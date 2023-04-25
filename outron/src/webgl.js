@@ -148,44 +148,21 @@ function createAmbientLightTexture(gl, width = 32, height = 32) {
   canvas.height = height;
   const context = canvas.getContext("2d");
 
-  //for (let x = 0; x < canvas.width; x++) {
   for (let y = 0; y < canvas.height; y++) {
-    /*
-      const value = Math.min(
-        1.0,
-        Math.max(
-          0,
-          1 - (easeOutCirc((y * 2) / canvas.height) * x) / canvas.width
-        )
-      );*/
     const value = Math.min(
       1.0,
-      Math.max(0, 1.75 - easeOutCirc((y * 2) / canvas.height))
+      Math.max(0, easeOutCirc((y * 2) / canvas.height))
     );
-    context.fillStyle = `rgba(0,0,0,${value})`;
+    context.fillStyle = `rgba(255,255,255,${value * 2})`;
     context.fillRect(0, y, canvas.width, 1);
   }
-  //}
-  /*
-  const blurCanvas = document.createElement("canvas");
-  blurCanvas.width = width;
-  blurCanvas.height = height;
-  const blurContext = canvas.getContext("2d");
-  blurContext.drawImage(canvas, 0, 0);
 
-  for (let x = 0; x < canvas.width; x += 1) {
-    context.drawImage(
-      canvas,
-      x,
-      0,
-      x + 1,
-      canvas.height,
-      x,
-      0,
-      x + 1,
-      canvas.height
-    );
-  }*/
+  for (let x = 0; x < canvas.width; x++) {
+    //const value = Math.min(1.0, Math.max(0, easeOutCirc(x / canvas.width)));
+    const value = x / canvas.width;
+    context.fillStyle = `rgba(255,255,255,${value})`;
+    context.fillRect(x, 0, 1, canvas.height);
+  }
 
   const texture = gl.createTexture();
 
