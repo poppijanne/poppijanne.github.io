@@ -58,18 +58,21 @@
   <body>
     <canvas id="webgl-canvas" width="480" height="480"></canvas>
     <!--<section id="title">RADIATION</section>-->
-    <section id="outron">
-      <image src="./img/outron.svg" />
-    </section>
-    <section id="title">
-      <image src="./img/title.svg" />
-    </section>
+    <div class="slide">
+      <section id="outron" class="hidden">
+        <image class="logo-animations" src="./img/outron.svg" />
+      </section>
+    </div>
+    <div class="slide">
+      <section id="title" class="hidden">
+        <image class="logo-animations" src="./img/title_3.svg" />
+      </section>
+    </div>
     <section id="vignette"></section>
     <section id="info" onclick="play()">CLICK TO START</section>
 
     <section id="debug">
       <div>now: <span id="debug-time"></span></div>
-      <div>events: <span id="debug-event"></span></div>
       <div>fps: <span id="debug-fps"></span></div>
       <div>delta: <span id="debug-delta"></span></div>
       <div><span id="debug-output"></span></div>
@@ -116,7 +119,7 @@
             .then(() => {
               demoPlaying = true;
               document.getElementById("info").style.display = "none";
-              document.getElementById("outron").style.opacity = 1.0;
+              //document.getElementById("outron").style.opacity = 0.0;
               main({ musicEnabled, clearEffects, showDebug });
             })
             .catch((error) => {
@@ -125,7 +128,7 @@
         } else {
           demoPlaying = true;
           document.getElementById("info").style.display = "none";
-          document.getElementById("outron").style.opacity = 1.0;
+          //document.getElementById("outron").style.opacity = 0.0;
           main({ musicEnabled, clearEffects, showDebug });
         }
       }
@@ -167,6 +170,11 @@
 
         const eventStartCellElement = document.createElement("td");
         eventStartCellElement.textContent = Math.floor(event.start);
+        eventStartCellElement.style.cursor = "pointer";
+        eventStartCellElement.style.textDecoration = "underline";
+        eventStartCellElement.onclick = (e) => {
+          document.getElementById("music").currentTime = event.start / 1000;
+        };
         eventRowElement.appendChild(eventStartCellElement);
 
         const eventIdCellElement = document.createElement("td");

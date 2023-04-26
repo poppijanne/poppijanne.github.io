@@ -10,158 +10,144 @@ window.addEventListener("keydown", (event) => {
   switch (event.key) {
     case "0":
       eventToBeAdded = {
-        id: `palette-${
-          timeline.getEventsByType(EVENT_TYPES.PALETTE).length + 1
-        }`,
         type: EVENT_TYPES.PALETTE,
         params: { index: 0 },
       };
       break;
     case "1":
       eventToBeAdded = {
-        id: `palette-${
-          timeline.getEventsByType(EVENT_TYPES.PALETTE).length + 1
-        }`,
         type: EVENT_TYPES.PALETTE,
         params: { index: 1 },
       };
       break;
     case "2":
       eventToBeAdded = {
-        id: `palette-${
-          timeline.getEventsByType(EVENT_TYPES.PALETTE).length + 1
-        }`,
         type: EVENT_TYPES.PALETTE,
         params: { index: 2 },
       };
       break;
     case "3":
       eventToBeAdded = {
-        id: `palette-${
-          timeline.getEventsByType(EVENT_TYPES.PALETTE).length + 1
-        }`,
         type: EVENT_TYPES.PALETTE,
         params: { index: 3 },
       };
       break;
     case "4":
       eventToBeAdded = {
-        id: `palette-${
-          timeline.getEventsByType(EVENT_TYPES.PALETTE).length + 1
-        }`,
         type: EVENT_TYPES.PALETTE,
         params: { index: 4 },
       };
       break;
     case "5":
       eventToBeAdded = {
-        id: `palette-${
-          timeline.getEventsByType(EVENT_TYPES.PALETTE).length + 1
-        }`,
         type: EVENT_TYPES.PALETTE,
         params: { index: 5 },
       };
       break;
     case "6":
       eventToBeAdded = {
-        id: `palette-${
-          timeline.getEventsByType(EVENT_TYPES.PALETTE).length + 1
-        }`,
         type: EVENT_TYPES.PALETTE,
         params: { index: 6 },
       };
       break;
     case "7":
       eventToBeAdded = {
-        id: `palette-${
-          timeline.getEventsByType(EVENT_TYPES.PALETTE).length + 1
-        }`,
         type: EVENT_TYPES.PALETTE,
         params: { index: 7 },
       };
       break;
     case "8":
       eventToBeAdded = {
-        id: `palette-${
-          timeline.getEventsByType(EVENT_TYPES.PALETTE).length + 1
-        }`,
         type: EVENT_TYPES.PALETTE,
         params: { index: 8 },
       };
       break;
     case "9":
       eventToBeAdded = {
-        id: `palette-${
-          timeline.getEventsByType(EVENT_TYPES.PALETTE).length + 1
-        }`,
         type: EVENT_TYPES.PALETTE,
         params: { index: 9 },
       };
       break;
     case "s":
       eventToBeAdded = {
-        id: `texture-stripes-${
-          timeline.getEventsByType(EVENT_TYPES.TEXTURE).length + 1
-        }`,
         type: EVENT_TYPES.TEXTURE,
         params: { texture: TEXTURES.STRIPES },
       };
       break;
     case "g":
       eventToBeAdded = {
-        id: `texture-grid-${
-          timeline.getEventsByType(EVENT_TYPES.TEXTURE).length + 1
-        }`,
         type: EVENT_TYPES.TEXTURE,
         params: { texture: TEXTURES.GRID },
       };
       break;
     case "h":
       eventToBeAdded = {
-        id: `hit-${timeline.getEventsByType(EVENT_TYPES.HIT).length + 1}`,
         type: EVENT_TYPES.HIT,
       };
       break;
     case "k":
       eventToBeAdded = {
-        id: `kick-${timeline.getEventsByType(EVENT_TYPES.KICK).length + 1}`,
         type: EVENT_TYPES.KICK,
       };
       break;
     case "z":
       eventToBeAdded = {
-        id: `stretch-grow-${
-          timeline.getEventsByType(EVENT_TYPES.STRETCH).length + 1
-        }`,
         type: EVENT_TYPES.STRETCH,
         params: { stretch: 8, time: 7000 },
       };
       break;
     case "x":
       eventToBeAdded = {
-        id: `stretch-shrink-${
-          timeline.getEventsByType(EVENT_TYPES.STRETCH).length + 1
-        }`,
         type: EVENT_TYPES.STRETCH,
         params: { stretch: 0, time: 7000 },
       };
       break;
     case "r":
       eventToBeAdded = {
-        id: `light-color-red-${
-          timeline.getEventsByType(EVENT_TYPES.LIGHT_COLOR).length + 1
-        }`,
         type: EVENT_TYPES.LIGHT_COLOR,
         params: { color: [1.0, 0.0, 0.0, 1.0] },
       };
       break;
     case "b":
       eventToBeAdded = {
-        id: `light-color-blue-${
-          timeline.getEventsByType(EVENT_TYPES.LIGHT_COLOR).length + 1
-        }`,
         type: EVENT_TYPES.LIGHT_COLOR,
         params: { color: [0.0, 0.0, 1.0, 1.0] },
+      };
+      break;
+    case "o":
+      eventToBeAdded = {
+        type: EVENT_TYPES.DISPLAY,
+        params: {
+          id: "outron",
+          className: "blur-in",
+        },
+      };
+      break;
+    case "O":
+      eventToBeAdded = {
+        type: EVENT_TYPES.DISPLAY,
+        params: {
+          id: "outron",
+          className: "logo-animations blur-out",
+        },
+      };
+      break;
+    case "q":
+      eventToBeAdded = {
+        type: EVENT_TYPES.DISPLAY,
+        params: {
+          id: "title",
+          className: "logo-animations blur-in",
+        },
+      };
+      break;
+    case "Q":
+      eventToBeAdded = {
+        type: EVENT_TYPES.DISPLAY,
+        params: {
+          id: "title",
+          className: "logo-animations blur-out",
+        },
       };
       break;
     case "t":
@@ -220,7 +206,7 @@ class StripeGenerator {
     );
 
     // add black line on top and bottom
-    this.context.fillStyle = `rgb(0,0,0)`;
+    this.context.fillStyle = `rgba(0,0,0,${alpha})`;
     this.context.fillRect(
       this.canvas.width - this.steps * delta - 1,
       0,
@@ -377,7 +363,6 @@ function main({ musicEnabled, clearEffects, showDebug }) {
   //let then = 0;
   const debugTimeElement = document.getElementById("debug-time");
   const debugOutputElement = document.getElementById("debug-output");
-  const eventOutputElement = document.getElementById("debug-event");
   const fpsOutputElement = document.getElementById("debug-fps");
   const deltaOutputElement = document.getElementById("debug-delta");
   const audio = document.getElementById("music");
@@ -417,6 +402,7 @@ function main({ musicEnabled, clearEffects, showDebug }) {
   */
   let past = 0;
   let bgColor = [1, 1, 1, 1];
+  let lastElement = null;
   //let stretch = 0;
 
   if (showDebug) {
@@ -468,10 +454,6 @@ function main({ musicEnabled, clearEffects, showDebug }) {
       */
 
       const currentEvents = timeline.getCurrentEvents(now);
-
-      eventOutputElement.textContent = currentEvents
-        .map((event) => event.id)
-        .join(",");
 
       if (eventToBeAdded) {
         timeline.addEvent(new Event({ ...eventToBeAdded, start: now }));
@@ -537,6 +519,10 @@ function main({ musicEnabled, clearEffects, showDebug }) {
             stretchTarget = event.params.stretch;
             stretchTime = event.params.time;
             break;
+          case EVENT_TYPES.DISPLAY:
+            document.getElementById(event.params.id).className =
+              event.params.className;
+            break;
           case EVENT_TYPES.LIGHT_COLOR:
             const targetColor = lightPalette[event.params.index];
             bgColor[0] = (bgColor[0] * 99 + targetColor[0]) / 100;
@@ -601,7 +587,7 @@ function main({ musicEnabled, clearEffects, showDebug }) {
 
   //document.querySelector("body").classList.add("bg-color-shifter");
   glCanvas.classList.add("canvas-animations");
-  document.getElementById("outron").classList.add("logo-animations");
+  //document.getElementById("outron").classList.add("logo-animations");
   requestAnimationFrame(render);
   const fpsCounter = setInterval(() => {
     fpsOutputElement.textContent = fps;

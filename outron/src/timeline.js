@@ -45,6 +45,7 @@ const EVENT_TYPES = {
   TEXTURE: 2,
   STRETCH: 3,
   LIGHT_COLOR: 6,
+  DISPLAY: 7,
   toString(type) {
     switch (type) {
       case EVENT_TYPES.HIT:
@@ -58,7 +59,11 @@ const EVENT_TYPES = {
       case EVENT_TYPES.STRETCH:
         return "Stretch";
       case EVENT_TYPES.LIGHT_COLOR:
-        return "Light color";
+        return "Light Color";
+      case EVENT_TYPES.DISPLAY:
+        return "Display";
+      default:
+        return "?";
     }
   },
 };
