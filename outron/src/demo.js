@@ -311,6 +311,11 @@ function main({ musicEnabled, clearEffects, showDebug }) {
   noiseCanvas1.height = textureHeight;
   document.getElementById("debug-canvas").appendChild(noiseCanvas1);
 
+  const finalCanvas = document.createElement("canvas");
+  finalCanvas.width = textureWidth;
+  finalCanvas.height = textureHeight;
+  document.getElementById("debug-canvas").appendChild(finalCanvas);
+
   const vertexShaderSource = document.querySelector("#vertex-shader-2d").text;
   const fragmentShaderSource = document.querySelector(
     "#fragment-shader-2d"
@@ -351,11 +356,13 @@ function main({ musicEnabled, clearEffects, showDebug }) {
   };
 
   const { texture: shadowTexture, canvas: shadowCanvas } =
-    createAmbientLightTexture(gl, 16, 64);
-  const texture1 = createTexture(gl, noiseCanvas1.width, noiseCanvas1.height);
+    createAmbientLightTexture(gl, textureWidth, textureHeight);
+  const texture1 = createTexture(gl, textureWidth, textureHeight);
   document.getElementById("debug-canvas").appendChild(shadowCanvas);
 
-  copyCanvasToTexture(gl, noiseCanvas1, texture1);
+  mergeCanvas(finalCanvas, noiseCanvas1);
+  mergeCanvas(finalCanvas, shadowCanvas);
+  copyCanvasToTexture(gl, finalCanvas, texture1);
 
   // Flip image pixels into the bottom-to-top order that WebGL expects.
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -558,7 +565,10 @@ function main({ musicEnabled, clearEffects, showDebug }) {
     }*/
 
       //generateGridToCanvas(noiseCanvas1, gridcolors, now);
-      copyCanvasToTexture(gl, noiseCanvas1, texture1);
+      //copyCanvasToTexture(gl, noiseCanvas1, texture1);
+      mergeCanvas(finalCanvas, noiseCanvas1);
+      mergeCanvas(finalCanvas, shadowCanvas, "overlay");
+      copyCanvasToTexture(gl, finalCanvas, texture1);
 
       drawScene({
         gl,
@@ -818,6 +828,12 @@ function setNormalAttribute(gl, normal, programInfo) {
     offset
   );
   gl.enableVertexAttribArray(programInfo.attributes.vertexNormal);
+}
+
+function mergeCanvas(target, source, globalCompositeOperation = "source-over") {
+  const targetContext = target.getContext("2d");
+  targetContext.globalCompositeOperation = globalCompositeOperation;
+  targetContext.drawImage(source, 0, 0);
 }
 
 function easeInOutQuart(x) {

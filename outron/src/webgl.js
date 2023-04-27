@@ -148,19 +148,27 @@ function createAmbientLightTexture(gl, width = 32, height = 32) {
   canvas.height = height;
   const context = canvas.getContext("2d");
 
+  context.globalAlpha = 1.0;
+  context.fillStyle = `rgb(196,196,196)`;
+  context.fillRect(0, 0, canvas.width, canvas.height);
+
   for (let y = 0; y < canvas.height; y++) {
     const value = Math.min(
       1.0,
-      Math.max(0, easeOutCirc((y * 2) / canvas.height))
+      Math.max(0, 1.0 - easeOutCirc((y * 2) / canvas.height) / 1)
     );
-    context.fillStyle = `rgba(255,255,255,${value * 2})`;
+    context.fillStyle = `rgba(0,0,0,${value})`;
     context.fillRect(0, y, canvas.width, 1);
   }
 
+  context.globalAlpha = 1.0;
+
   for (let x = 0; x < canvas.width; x++) {
     //const value = Math.min(1.0, Math.max(0, easeOutCirc(x / canvas.width)));
-    const value = x / canvas.width;
-    context.fillStyle = `rgba(255,255,255,${value})`;
+    const value = x / canvas.width / 1.5;
+    context.fillStyle = `rgba(196,196,196,${value})`;
+    //
+    //context.globalAlpha = 1.0 - x / canvas.width;
     context.fillRect(x, 0, 1, canvas.height);
   }
 
