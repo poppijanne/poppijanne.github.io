@@ -135,7 +135,9 @@ function createGridTexture(gl, width = 32, height = 32) {
   gl.bindTexture(gl.TEXTURE_2D, texture);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
 
-  gl.generateMipmap(gl.TEXTURE_2D);
+  //gl.generateMipmap(gl.TEXTURE_2D);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   //gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 
   return texture;
@@ -183,6 +185,71 @@ function createAmbientLightTexture(gl, width = 32, height = 32) {
   return { texture, canvas };
 }
 
+function createTunnelLightCanvas1(gl, width = 32, height = 32) {
+  console.log(`generating shadow texture`);
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d");
+
+  for (let x = 0; x < canvas.width; x++) {
+    const alpha = easeInQuad(x / canvas.width);
+    context.fillStyle = `rgba(255,255,255,${alpha})`;
+    context.fillRect(x, 0, 1, canvas.height);
+  }
+  /*
+  for (let y = 0; y < canvas.height / 2; y++) {
+    const alpha = easeOutCubic(y / canvas.height / 2);
+    context.fillStyle = `rgba(255,255,255,${alpha / 4})`;
+    context.fillRect(0, y, canvas.width, 1);
+  }
+
+  for (let y = canvas.height / 2; y < canvas.height; y++) {
+    const alpha = easeOutCubic((canvas.height - y) / canvas.height / 2);
+    context.fillStyle = `rgba(255,255,255,${alpha / 4})`;
+    context.fillRect(0, y, canvas.width, 1);
+  }*/
+
+  return canvas;
+}
+
+function createTunnelLightCanvas2(gl, width = 32, height = 32) {
+  console.log(`generating shadow texture`);
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d");
+
+  for (let x = 0; x < canvas.width; x++) {
+    const alpha = easeInQuad(x / canvas.width);
+    context.fillStyle = `rgba(255,255,255,${alpha})`;
+    context.fillRect(x, 0, 1, canvas.height);
+  }
+
+  for (let y = 0; y < canvas.height / 2; y++) {
+    const alpha = easeOutCubic(y / canvas.height / 2);
+    context.fillStyle = `rgba(255,255,255,${alpha / 2})`;
+    context.fillRect(0, y, canvas.width, 1);
+  }
+
+  for (let y = canvas.height / 2; y < canvas.height; y++) {
+    const alpha = easeOutCubic((canvas.height - y) / canvas.height / 2);
+    context.fillStyle = `rgba(255,255,255,${alpha / 2})`;
+    context.fillRect(0, y, canvas.width, 1);
+  }
+
+  return canvas;
+}
+
+function setTunnelLightCanvasColor(canvas, color) {
+  const context = canvas.getContext("2d");
+  context.globalCompositeOperation = "source-atop";
+  context.fillStyle = `rgb(${Math.floor(color[0] * 255)},${Math.floor(
+    color[1] * 255
+  )},${Math.floor(color[2] * 255)})`;
+  context.fillRect(0, 0, canvas.width, canvas.height);
+}
+
 function createTexture(gl, width = 32, height = 32) {
   console.log(`generating texture`);
   const canvas = document.createElement("canvas");
@@ -194,8 +261,8 @@ function createTexture(gl, width = 32, height = 32) {
   const texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
-  //gl.generateMipmap(gl.TEXTURE_2D);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.generateMipmap(gl.TEXTURE_2D);
+  //gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 
   return texture;
 }
@@ -258,7 +325,7 @@ let gridLightY = -1;
 let previousHorizontalLineTime = 0;
 let gridPaletteIndex = 0;
 
-function generateGridToCanvas(canvas, palette, now, hit, delta = 1) {
+function generateGridToCanvas(canvas, palette, now, hit, delta = 1, bgColor) {
   if (gridLightY === -1) {
     gridLightY = Math.floor(canvas.height / 2);
   }
@@ -336,14 +403,26 @@ function generateGridToCanvas(canvas, palette, now, hit, delta = 1) {
     if (palette.noise) {
       context.fillStyle = `rgb(${palette.noise[0]},${palette.noise[1]},${palette.noise[2]})`;
       for (let x = canvas.width - delta; x < canvas.width; x++) {
+        const y1 = Math.random() * canvas.height - 50;
+        const y2 = Math.random() * canvas.height + 50;
+        context.fillRect(x, Math.min(y1, y2), 1, Math.abs(y1 - y2));
+        /*
         context.fillRect(
           x,
           Math.random() * canvas.height,
           1,
           1 + Math.random() * (canvas.height - 1)
         );
+        */
       }
     }
+
+    /*
+    context.fillStyle = `rgb(${palette.noise[0]},${palette.noise[1]},${palette.noise[2]})`;
+    for (let i = 0; i < 3; i++) {
+      const y = Math.random() * canvas.height;
+      context.fillRect(canvas.width - 1, Math.random() * canvas.height, 1, 10);
+    }*/
 
     // grid lines
     context.fillStyle = fillStyle;
@@ -506,5 +585,17 @@ function copyCanvasToTexture(gl, canvas, texture) {
   gl.bindTexture(gl.TEXTURE_2D, texture);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
   gl.generateMipmap(gl.TEXTURE_2D);
-  //gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(
+    gl.TEXTURE_2D,
+    gl.TEXTURE_MIN_FILTER,
+    gl.LINEAR_MIPMAP_LINEAR
+  );
+  /*
+  gl.texParameteri(
+    gl.TEXTURE_2D,
+    gl.TEXTURE_MAG_FILTER,
+    gl.NEAREST_MIPMAP_LINEAR
+  );*/
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 }

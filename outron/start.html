@@ -113,6 +113,20 @@
             >
           </div>
           <div>
+            <input
+              id="show-textures"
+              type="checkbox"
+              onclick="updateLink()"
+            /><label for="show-textures">SHOW TEXTURES</label>
+          </div>
+          <div>
+            <input
+              id="show-events"
+              type="checkbox"
+              onclick="updateLink()"
+            /><label for="show-events">SHOW EVENTS</label>
+          </div>
+          <div>
             <a id="start-link" href="demo.html">START</a>
           </div>
         </div>
@@ -126,11 +140,15 @@
       const clearEffects =
         document.getElementById("clear-effects").checked === true;
       const showAudio = document.getElementById("show-audio").checked === true;
+      const showEvents =
+        document.getElementById("show-events").checked === true;
       const showDebug = document.getElementById("debug").checked === true;
+      const showTextures =
+        document.getElementById("show-textures").checked === true;
 
       document.getElementById(
         "start-link"
-      ).href = `demo.html?music=${musicEnabled}&clear-effects=${clearEffects}&show-audio=${showAudio}&debug=${showDebug}`;
+      ).href = `demo.html?music=${musicEnabled}&clear-effects=${clearEffects}&show-audio=${showAudio}&debug=${showDebug}&show-textures=${showTextures}&show-events=${showEvents}`;
     }
     updateLink();
   </script>

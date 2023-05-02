@@ -42,10 +42,12 @@ const EVENT_TYPES = {
   HIT: 4,
   KICK: 5,
   PALETTE: 1,
+  LIGHT_COLOR: 6,
   TEXTURE: 2,
   STRETCH: 3,
-  LIGHT_COLOR: 6,
   DISPLAY: 7,
+  SHAKE: 8,
+  TEXT: 9,
   toString(type) {
     switch (type) {
       case EVENT_TYPES.HIT:
@@ -62,6 +64,10 @@ const EVENT_TYPES = {
         return "Light Color";
       case EVENT_TYPES.DISPLAY:
         return "Display";
+      case EVENT_TYPES.SHAKE:
+        return "Shake";
+      case EVENT_TYPES.TEXT:
+        return "Text";
       default:
         return "?";
     }

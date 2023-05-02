@@ -10,6 +10,8 @@
     <script src="./src/timeline.js"></script>
     <script src="./src/events.js"></script>
     <script src="./src/palette.js"></script>
+    <script src="./src/stripe-generator.js"></script>
+    <script src="./src/text.js"></script>
     <script src="./src/webgl.js"></script>
     <script src="./src/geometry.js"></script>
     <script src="./src/demo.js"></script>
@@ -47,9 +49,9 @@
       uniform vec4 uFogColor;
 
       void main() {
-        float fog = min(1.0,max(0.0,(vZ+uFogDepth)/15.0));
-        gl_FragColor = (texture2D(uSampler, vTextureCoord)+0.1) * fog + uFogColor * (1.0 - fog);
-        //gl_FragColor = texture2D(uSampler, vTextureCoord);
+        //float fog = min(1.0,max(0.0,(vZ+uFogDepth)/15.0));
+        //gl_FragColor = (texture2D(uSampler, vTextureCoord)+0.1) * fog + uFogColor * (1.0 - fog);
+        gl_FragColor = texture2D(uSampler, vTextureCoord);
       }
     </script>
     <script></script>
@@ -60,13 +62,20 @@
     <!--<section id="title">RADIATION</section>-->
     <div class="slide">
       <section id="outron" class="hidden">
-        <image class="logo-animations" src="./img/outron.svg" />
+        <image
+          class="logo-animations"
+          src="./img/outron.svg"
+          style="mix-blend-mode: color-dodge"
+        />
       </section>
     </div>
     <div class="slide">
       <section id="title" class="hidden">
         <image class="logo-animations" src="./img/title_3.svg" />
       </section>
+    </div>
+    <div class="slide" style="mix-blend-mode: color-dodge">
+      <section id="text"></section>
     </div>
     <section id="vignette"></section>
     <section id="info" onclick="play()">CLICK TO START</section>
@@ -78,6 +87,12 @@
       <div><span id="debug-output"></span></div>
       <div id="debug-canvas"></div>
       <div id="debug-light-color-buttons"></div>
+
+      <div>
+        <label for="text-input">Text: </label
+        ><input id="text-input" type="text" />
+        <input type="button" onclick="setTextSlideText()" value="Change" />
+      </div>
     </section>
 
     <section id="debug-events">
@@ -89,6 +104,10 @@
     <audio id="music" controls src="./audio/OUTRON_42_00.mp3"></audio>
   </body>
   <script>
+    document.getElementById("text-input").onkeydown = (event) => {
+      event.stopPropagation(true);
+    };
+
     let demoPlaying = false;
 
     function play() {
@@ -99,6 +118,8 @@
       const clearEffects = url.searchParams.get("clear-effects") === "true";
       const showDebug = url.searchParams.get("debug") === "true";
       const showAudio = url.searchParams.get("show-audio") === "true";
+      const showTextures = url.searchParams.get("show-textures") === "true";
+      const showEvents = url.searchParams.get("show-events") === "true";
 
       if (showDebug === true) {
         document.getElementById("debug").style.display = "block";
@@ -119,8 +140,15 @@
             .then(() => {
               demoPlaying = true;
               document.getElementById("info").style.display = "none";
+              document.getElementById("vignette").style.cursor = "none";
               //document.getElementById("outron").style.opacity = 0.0;
-              main({ musicEnabled, clearEffects, showDebug });
+              main({
+                musicEnabled,
+                clearEffects,
+                showDebug,
+                showTextures,
+                showEvents,
+              });
             })
             .catch((error) => {
               console.error(error);
@@ -226,6 +254,23 @@
         currentEventElement.className = "current";
         previousCurrentEventElements.push(currentEventElement);
       });
+    }
+
+    function setTextSlideText() {
+      //const textElement = document.getElementById("text");
+      const text = document.getElementById("text-input").value;
+      /*
+      textElement.innerHTML = textToSVG({
+        text: newText.toUpperCase(),
+        //fillColor: "#f0f",
+        fill: "url(#gradient-metal)",
+        stroke: "url(#gradient-ghost)",
+      });
+      */
+      eventToBeAdded = {
+        type: EVENT_TYPES.TEXT,
+        params: { text },
+      };
     }
   </script>
 </html>

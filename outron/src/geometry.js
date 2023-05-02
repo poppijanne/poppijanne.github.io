@@ -1,4 +1,5 @@
 const STAGE_DEPTH = -20.0;
+const STAGE_NEAR = 0.0;
 let STAGE_WIDTH = 2.0;
 
 const geometry = {
@@ -7,7 +8,7 @@ const geometry = {
       // Left wall
       -STAGE_WIDTH / 2,
       -1.0,
-      2.0,
+      STAGE_NEAR,
       -STAGE_WIDTH / 2,
       -1.0,
       STAGE_DEPTH,
@@ -16,27 +17,27 @@ const geometry = {
       STAGE_DEPTH,
       -STAGE_WIDTH / 2,
       1.0,
-      2.0,
+      STAGE_NEAR,
       // Right wall
       STAGE_WIDTH / 2,
       -1.0,
       STAGE_DEPTH,
       STAGE_WIDTH / 2,
       -1.0,
-      2.0,
+      STAGE_NEAR,
       STAGE_WIDTH / 2,
       1.0,
-      2.0,
+      STAGE_NEAR,
       STAGE_WIDTH / 2,
       1.0,
       STAGE_DEPTH,
       // Floor
       -STAGE_WIDTH / 2,
       -1.0,
-      2.0,
+      STAGE_NEAR,
       STAGE_WIDTH / 2,
       -1.0,
-      2.0,
+      STAGE_NEAR,
       STAGE_WIDTH / 2,
       -1.0,
       STAGE_DEPTH,
@@ -52,10 +53,10 @@ const geometry = {
       STAGE_DEPTH,
       STAGE_WIDTH / 2,
       1.0,
-      2.0,
+      STAGE_NEAR,
       -STAGE_WIDTH / 2,
       1.0,
-      2.0,
+      STAGE_NEAR,
       // back
       /*
       -STAGE_WIDTH / 2,
@@ -109,6 +110,7 @@ const geometry = {
     textureCoord: [
       // Left wall
       0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
+      //0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0,
       // Right wall
       1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0,
       // Floor
@@ -117,6 +119,35 @@ const geometry = {
       1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
       // back
       //0.99, 0.5, 1.0, 0.5, 1.0, 0.51, 0.99, 0.51,
+    ],
+  },
+  display: {
+    vertices: [
+      -STAGE_WIDTH / 2,
+      -1.0,
+      STAGE_DEPTH,
+      STAGE_WIDTH / 2,
+      -1.0,
+      STAGE_DEPTH,
+      STAGE_WIDTH / 2,
+      1.0,
+      STAGE_DEPTH,
+      -STAGE_WIDTH / 2,
+      1.0,
+      STAGE_DEPTH,
+    ],
+    indices: [0, 1, 2, 0, 2, 3],
+    textureCoord: [
+      // Left wall
+      0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
+      // Right wall
+      1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0,
+      // Floor
+      0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0,
+      // Ceiling
+      1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+      // back
+      0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0,
     ],
   },
 };

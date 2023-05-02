@@ -90,6 +90,11 @@ window.addEventListener("keydown", (event) => {
         type: EVENT_TYPES.KICK,
       };
       break;
+    case "a":
+      eventToBeAdded = {
+        type: EVENT_TYPES.SHAKE,
+      };
+      break;
     case "z":
       eventToBeAdded = {
         type: EVENT_TYPES.STRETCH,
@@ -166,101 +171,20 @@ const TEXTURES = {
 
 let timeline = new Timeline(timelineEvents);
 
-class StripeGenerator {
-  constructor({ height = 1, maxWidth = 1, y = 0, steps = 1, palette }) {
-    this.y = y;
-    this.maxWidth = maxWidth;
-    this.height = height;
-    this.steps = steps;
-    this.width = Math.ceil(Math.random() * maxWidth);
-    this.color = palette[Math.floor(palette.length * Math.random())];
-    this.canvas = document.createElement("canvas");
-    this.canvas.width = maxWidth;
-    this.canvas.height = height;
-    this.context = this.canvas.getContext("2d");
-    this.context.fillStyle = `rgb(0,0,0)`;
-    this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
-  }
-
-  render(context, alpha = 1.0, jitter = 0.0, palette, delta) {
-    // copy target canvas to stripe canvas
-    this.context.drawImage(
-      context.canvas,
-      0,
-      this.y,
-      this.canvas.width,
-      this.canvas.height,
-      0 - this.steps * delta,
-      0,
-      context.canvas.width,
-      this.height
-    );
-
-    // draw rect to right edge with stripe color
-    this.context.fillStyle = `rgb(${this.color[0]},${this.color[1]},${this.color[2]})`;
-    this.context.fillRect(
-      this.canvas.width - this.steps * delta - 1,
-      0,
-      this.steps * delta + 1,
-      this.canvas.height
-    );
-
-    // add black line on top and bottom
-    this.context.fillStyle = `rgba(0,0,0,${alpha})`;
-    this.context.fillRect(
-      this.canvas.width - this.steps * delta - 1,
-      0,
-      this.steps * delta + 1,
-      1
-    );
-    this.context.fillRect(
-      this.canvas.width - this.steps * delta - 1,
-      this.canvas.height - 1,
-      this.steps * delta + 1,
-      1
-    );
-
-    context.globalAlpha = alpha;
-
-    context.drawImage(
-      this.canvas,
-      0,
-      this.y + (Math.random() - Math.random()) * jitter
-    );
-
-    //context.drawImage(this.canvas, 0, this.y + 0.1 * jitter);
-    //context.drawImage(this.canvas, 0, this.y - 0.1 * jitter);
-
-    //context.drawImage(this.canvas, 0, this.y);
-
-    /*
-    context.drawImage(
-      this.canvas,
-      0,
-      this.y - jitter //(Math.random() + Math.random()) * jitter * delta
-    );*/
-    //context.drawImage(this.canvas, 0, this.y + Math.random());
-    //context.drawImage(this.canvas, 0, this.y + Math.random() * 0.1);
-    context.globalAlpha = 1.0;
-
-    this.width -= this.steps * delta;
-    if (this.width < 1) {
-      this.width = Math.ceil((Math.random() * this.maxWidth) / 3);
-      this.color = palette[Math.floor(palette.length * Math.random())];
-      this.steps = Math.ceil(Math.random() * 3);
-      //this.height = Math.ceil(Math.random() * (textureHeight / 32));
-    }
-  }
-}
-
 const stripes = [];
 
 const textureWidth = 128;
-const textureHeight = 256 * 2;
+const textureHeight = 512;
 //let stretch = 0.0;
 let startTime = 0;
 
-function main({ musicEnabled, clearEffects, showDebug }) {
+function main({
+  musicEnabled,
+  clearEffects,
+  showDebug,
+  showTextures,
+  showEvents,
+}) {
   let y = 0;
   startTime = Date.now() - loadTime;
 
@@ -288,7 +212,7 @@ function main({ musicEnabled, clearEffects, showDebug }) {
   }
 
   while (y < textureHeight) {
-    const height = Math.max(4, Math.ceil(Math.random() * (textureHeight / 32)));
+    const height = Math.max(6, Math.ceil(Math.random() * (textureHeight / 32)));
     stripes.push(
       new StripeGenerator({
         y,
@@ -309,12 +233,29 @@ function main({ musicEnabled, clearEffects, showDebug }) {
   const noiseCanvas1 = document.createElement("canvas");
   noiseCanvas1.width = textureWidth;
   noiseCanvas1.height = textureHeight;
-  document.getElementById("debug-canvas").appendChild(noiseCanvas1);
+  if (showTextures)
+    document.getElementById("debug-canvas").appendChild(noiseCanvas1);
+
+  const lightCanvas1 = createTunnelLightCanvas1(
+    gl,
+    textureWidth,
+    textureHeight
+  );
+  if (showTextures)
+    document.getElementById("debug-canvas").appendChild(lightCanvas1);
+  const lightCanvas2 = createTunnelLightCanvas2(
+    gl,
+    textureWidth,
+    textureHeight
+  );
+  if (showTextures)
+    document.getElementById("debug-canvas").appendChild(lightCanvas2);
 
   const finalCanvas = document.createElement("canvas");
   finalCanvas.width = textureWidth;
   finalCanvas.height = textureHeight;
-  document.getElementById("debug-canvas").appendChild(finalCanvas);
+  if (showTextures)
+    document.getElementById("debug-canvas").appendChild(finalCanvas);
 
   const vertexShaderSource = document.querySelector("#vertex-shader-2d").text;
   const fragmentShaderSource = document.querySelector(
@@ -358,7 +299,8 @@ function main({ musicEnabled, clearEffects, showDebug }) {
   const { texture: shadowTexture, canvas: shadowCanvas } =
     createAmbientLightTexture(gl, textureWidth, textureHeight);
   const texture1 = createTexture(gl, textureWidth, textureHeight);
-  document.getElementById("debug-canvas").appendChild(shadowCanvas);
+  if (showTextures)
+    document.getElementById("debug-canvas").appendChild(shadowCanvas);
 
   mergeCanvas(finalCanvas, noiseCanvas1);
   mergeCanvas(finalCanvas, shadowCanvas);
@@ -409,10 +351,10 @@ function main({ musicEnabled, clearEffects, showDebug }) {
   */
   let past = 0;
   let bgColor = [1, 1, 1, 1];
-  let lastElement = null;
+  let currentText = "";
   //let stretch = 0;
 
-  if (showDebug) {
+  if (showDebug && showEvents) {
     renderEvents(timeline, 0);
   }
 
@@ -465,14 +407,17 @@ function main({ musicEnabled, clearEffects, showDebug }) {
       if (eventToBeAdded) {
         timeline.addEvent(new Event({ ...eventToBeAdded, start: now }));
         eventToBeAdded = undefined;
-        renderEvents(timeline);
+        if (showEvents) renderEvents(timeline);
       }
 
       let paletteIndex = 0;
       let hit = false;
       let kick = false;
       let kickStart = 0;
-      const kickLength = 200;
+      const kickLength = 400;
+      let shake = false;
+      let shakeStart = 0;
+      const shakeLength = 400;
       //let gridColors = gridPalettes[0];
 
       let stretchTarget = 0;
@@ -496,6 +441,12 @@ function main({ musicEnabled, clearEffects, showDebug }) {
               kickStart = event.start;
             }
             break;
+          case EVENT_TYPES.SHAKE:
+            if (now - event.start < shakeLength) {
+              shake = true;
+              shakeStart = event.start;
+            }
+            break;
           case EVENT_TYPES.TEXTURE:
             switch (event.params.texture) {
               case TEXTURES.STRIPES:
@@ -514,7 +465,8 @@ function main({ musicEnabled, clearEffects, showDebug }) {
                   gridPalettes[paletteIndex],
                   now,
                   hit,
-                  delta
+                  delta,
+                  bgColor
                 );
                 break;
               default:
@@ -535,6 +487,17 @@ function main({ musicEnabled, clearEffects, showDebug }) {
             bgColor[0] = (bgColor[0] * 99 + targetColor[0]) / 100;
             bgColor[1] = (bgColor[1] * 99 + targetColor[1]) / 100;
             bgColor[2] = (bgColor[2] * 99 + targetColor[2]) / 100;
+            break;
+          case EVENT_TYPES.TEXT:
+            if (currentText !== event.params.text) {
+              console.log(event.params.text);
+              document.getElementById("text").innerHTML = textToSVG({
+                text: event.params.text.toUpperCase(),
+                fill: "url(#gradient-metal)",
+                stroke: "url(#gradient-ghost)",
+              });
+              currentText = event.params.text;
+            }
             break;
           default:
             break;
@@ -566,8 +529,24 @@ function main({ musicEnabled, clearEffects, showDebug }) {
 
       //generateGridToCanvas(noiseCanvas1, gridcolors, now);
       //copyCanvasToTexture(gl, noiseCanvas1, texture1);
+      setTunnelLightCanvasColor(lightCanvas1, bgColor);
+      setTunnelLightCanvasColor(lightCanvas2, bgColor);
       mergeCanvas(finalCanvas, noiseCanvas1);
       mergeCanvas(finalCanvas, shadowCanvas, "overlay");
+      mergeCanvas(finalCanvas, lightCanvas1, "source-over");
+
+      let y = 0;
+      let f = 1.0 - (now - kickStart) / kickLength;
+
+      if (kick) {
+        mergeCanvas(finalCanvas, lightCanvas2, "source-over", f);
+      }
+
+      if (shake) {
+        y = Math.sin(now * f * 0.1) * 0.005 /* * f*/;
+      }
+      //
+      //mergeCanvas(finalCanvas, shadowCanvas, "multiply");
       copyCanvasToTexture(gl, finalCanvas, texture1);
 
       drawScene({
@@ -579,7 +558,7 @@ function main({ musicEnabled, clearEffects, showDebug }) {
         now,
         stretch,
         x: 0,
-        y: 0,
+        y,
         z: 0,
         fogDepth: kick
           ? -STAGE_DEPTH - (kickLength - (now - kickStart)) / 100
@@ -588,7 +567,7 @@ function main({ musicEnabled, clearEffects, showDebug }) {
         bgColor,
       });
 
-      if (showDebug) {
+      if (showDebug && showEvents) {
         updateEvents(timeline, now);
       }
     }
@@ -830,10 +809,17 @@ function setNormalAttribute(gl, normal, programInfo) {
   gl.enableVertexAttribArray(programInfo.attributes.vertexNormal);
 }
 
-function mergeCanvas(target, source, globalCompositeOperation = "source-over") {
+function mergeCanvas(
+  target,
+  source,
+  globalCompositeOperation = "source-over",
+  alpha = 1.0
+) {
   const targetContext = target.getContext("2d");
+  targetContext.globalAlpha = alpha;
   targetContext.globalCompositeOperation = globalCompositeOperation;
   targetContext.drawImage(source, 0, 0);
+  targetContext.globalAlpha = 1.0;
 }
 
 function easeInOutQuart(x) {
@@ -846,4 +832,12 @@ function easeOutCirc(x) {
 
 function easeOutCubic(x) {
   return 1.0 - Math.pow(1.0 - x, 3.0);
+}
+
+function easeInCirc(x) {
+  return 1 - Math.sqrt(1 - Math.pow(x, 2));
+}
+
+function easeInQuad(x) {
+  return x * x;
 }
