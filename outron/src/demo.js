@@ -181,7 +181,7 @@ let startTime = 0;
 function main({
   musicEnabled,
   clearEffects,
-  showDebug,
+  showDevTools,
   showTextures,
   showEvents,
 }) {
@@ -210,6 +210,94 @@ function main({
       },
     ]);
   }
+
+  const greets = [
+    "hello",
+    "amiga",
+    "astral",
+    "Adapt",
+    "C64",
+    "basscadet",
+    "Decadence",
+    "Byterapers",
+    "Aikapallo",
+    "Farbrausch",
+    "Future Crew",
+    "Darkki",
+    "Division",
+    "Ivory",
+    "Tekotuotanto",
+    "Kewlers",
+    "MSX",
+    "RIBBON",
+    "HBC",
+    "Epoch",
+    "PuavoHard",
+    "CNCD",
+    "FAIRLIGHT",
+    "Pyrotech",
+    "rawArgon",
+    "Peisik",
+    "hedelmae",
+    "Moppi Productions",
+    "Spectrum",
+    "Synthwave lovers",
+    "Extream",
+    "Fiture Crew",
+    "Mazor",
+    "Armada",
+    "Matt Current",
+    "Andromeda Software Development",
+    "Wide Load",
+    "TPOLM",
+    "XZM",
+    "nosfe",
+    "Britelite",
+    "Traction",
+    "Random",
+    "Truck",
+    "Trilobit",
+    "Mature Furk",
+    "GRiMM",
+    "King Thrill",
+    "Little Bitchard",
+    "Jumalauta",
+    "Peetu Nuottaj\u00C4rvi",
+    "taat",
+    "compo crew",
+    "thank you",
+    "assembly",
+    "for your wonderful art",
+    "and warm memories",
+  ];
+
+  const styles = [
+    "METAL",
+    "SOLID_RED",
+    "SUNSET",
+    "PINK_STROKE",
+    "SOLID_TEAL",
+    "SUNSET_STROKE",
+    "SOLID_VIOLET",
+  ];
+  const textSlides = ["text", "text-2"];
+  let time = 73387;
+
+  greets.forEach((greet, index) => {
+    timeline.addEvent(
+      new Event({
+        type: EVENT_TYPES.TEXT,
+        start: time, //68133 + index * 4480,
+        params: {
+          text: greet,
+          style: styles[index % 7],
+          slide: textSlides[index % 2],
+          duration: 2,
+        },
+      })
+    );
+    time += Math.max(4480 / 3, greet.length * 140);
+  });
 
   while (y < textureHeight) {
     const height = Math.max(6, Math.ceil(Math.random() * (textureHeight / 32)));
@@ -352,9 +440,10 @@ function main({
   let past = 0;
   let bgColor = [1, 1, 1, 1];
   let currentText = "";
+
   //let stretch = 0;
 
-  if (showDebug && showEvents) {
+  if (showEvents) {
     renderEvents(timeline, 0);
   }
 
@@ -491,10 +580,14 @@ function main({
           case EVENT_TYPES.TEXT:
             if (currentText !== event.params.text) {
               console.log(event.params.text);
-              document.getElementById("text").innerHTML = textToSVG({
+              const slide = event.params.slide || "text";
+              document.getElementById(slide).innerHTML = textToSVG({
                 text: event.params.text.toUpperCase(),
-                fill: "url(#gradient-metal)",
-                stroke: "url(#gradient-ghost)",
+                duration: event.params.duration,
+                fill:
+                  event.params.style && TEXT_STYLES[event.params.style].fill,
+                stroke:
+                  event.params.style && TEXT_STYLES[event.params.style].stroke,
               });
               currentText = event.params.text;
             }
@@ -567,16 +660,15 @@ function main({
         bgColor,
       });
 
-      if (showDebug && showEvents) {
+      if (showEvents) {
         updateEvents(timeline, now);
       }
     }
     requestAnimationFrame(render);
   }
 
-  //document.querySelector("body").classList.add("bg-color-shifter");
   glCanvas.classList.add("canvas-animations");
-  //document.getElementById("outron").classList.add("logo-animations");
+
   requestAnimationFrame(render);
   const fpsCounter = setInterval(() => {
     fpsOutputElement.textContent = fps;
@@ -747,66 +839,6 @@ function setPositionAttribute(gl, position, programInfo) {
     offset
   );
   gl.enableVertexAttribArray(programInfo.attributes.vertexPosition);
-}
-
-// Tell WebGL how to pull out the positions from the position
-// buffer into the vertexPosition attribute.
-function setColorAttribute(gl, color, programInfo) {
-  const numComponents = 4; // pull out 4 values per iteration
-  const type = gl.FLOAT; // the data in the buffer is 32bit floats
-  const normalize = false; // don't normalize
-  const stride = 0; // how many bytes to get from one set of values to the next
-  // 0 = use type and numComponents above
-  const offset = 0; // how many bytes inside the buffer to start from
-  gl.bindBuffer(gl.ARRAY_BUFFER, color);
-  gl.vertexAttribPointer(
-    programInfo.attributes.vertexColor,
-    numComponents,
-    type,
-    normalize,
-    stride,
-    offset
-  );
-  gl.enableVertexAttribArray(programInfo.attributes.vertexColor);
-}
-
-// tell webgl how to pull out the texture coordinates from buffer
-function setTextureAttribute(gl, textureCoord, programInfo) {
-  const num = 2; // every coordinate composed of 2 values
-  const type = gl.FLOAT; // the data in the buffer is 32-bit float
-  const normalize = false; // don't normalize
-  const stride = 0; // how many bytes to get from one set to the next
-  const offset = 0; // how many bytes inside the buffer to start from
-  gl.bindBuffer(gl.ARRAY_BUFFER, textureCoord);
-  gl.vertexAttribPointer(
-    programInfo.attributes.textureCoord,
-    num,
-    type,
-    normalize,
-    stride,
-    offset
-  );
-  gl.enableVertexAttribArray(programInfo.attributes.textureCoord);
-}
-
-// Tell WebGL how to pull out the normals from
-// the normal buffer into the vertexNormal attribute.
-function setNormalAttribute(gl, normal, programInfo) {
-  const numComponents = 3;
-  const type = gl.FLOAT;
-  const normalize = false;
-  const stride = 0;
-  const offset = 0;
-  gl.bindBuffer(gl.ARRAY_BUFFER, normal);
-  gl.vertexAttribPointer(
-    programInfo.attributes.vertexNormal,
-    numComponents,
-    type,
-    normalize,
-    stride,
-    offset
-  );
-  gl.enableVertexAttribArray(programInfo.attributes.vertexNormal);
 }
 
 function mergeCanvas(

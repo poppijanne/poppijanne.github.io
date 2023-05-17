@@ -68,9 +68,14 @@ const palette3 = [
 ];
 palette3.hit = [0, 64, 255];
 
-const gridPalette3 = [[0, 0, 0]];
+const gridPalette3 = [
+  [8, 8, 16],
+  [8, 16, 64],
+  [8, 32, 128],
+  [8, 16, 64],
+];
 gridPalette3.accent = [255, 16, 16];
-gridPalette3.noise = [32, 32, 255];
+gridPalette3.noise = [32, 50, 255];
 gridPalette3.hit = [255, 128, 128];
 /*
   const gridPalette3 = [
@@ -143,8 +148,13 @@ const palette6 = [
 ];
 palette6.hit = [255, 255, 255];
 
-const gridPalette6 = [[32, 32, 210]];
-gridPalette6.noise = [32, 128, 200];
+//const gridPalette6 = [[32, 54, 96]];
+const gridPalette6 = [
+  [8, 16, 32],
+  [32, 54, 96],
+];
+//gridPalette6.noise = [32, 128, 200];
+gridPalette6.noise = [16, 100, 196];
 gridPalette6.accent = [255, 128, 32];
 gridPalette6.hit = [255, 255, 255];
 
@@ -191,8 +201,8 @@ gridPalette8.hit = [0, 255, 255];
 
 const palette9 = [
   [255, 0, 255],
-  [0, 0, 0],
-  [0, 0, 0],
+  [64, 0, 64],
+  [32, 0, 32],
   [0, 0, 0],
   [0, 0, 0],
   [0, 0, 0],

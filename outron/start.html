@@ -107,10 +107,11 @@
             /><label for="clear-effects">CLEAR EFFECTS</label>
           </div>
           <div>
-            <input id="debug" type="checkbox" onclick="updateLink()" /><label
-              for="debug"
-              >DEBUG INFO</label
-            >
+            <input
+              id="dev-tools"
+              type="checkbox"
+              onclick="updateLink()"
+            /><label for="dev-tools">DEVELOPER TOOLS</label>
           </div>
           <div>
             <input
@@ -125,6 +126,13 @@
               type="checkbox"
               onclick="updateLink()"
             /><label for="show-events">SHOW EVENTS</label>
+          </div>
+          <div>
+            <input
+              id="show-cursor"
+              type="checkbox"
+              onclick="updateLink()"
+            /><label for="show-cursor">SHOW MOUSE CURSOR</label>
           </div>
           <div>
             <a id="start-link" href="demo.html">START</a>
@@ -142,13 +150,15 @@
       const showAudio = document.getElementById("show-audio").checked === true;
       const showEvents =
         document.getElementById("show-events").checked === true;
-      const showDebug = document.getElementById("debug").checked === true;
+      const showDevTools =
+        document.getElementById("dev-tools").checked === true;
       const showTextures =
         document.getElementById("show-textures").checked === true;
-
+      const showCursor =
+        document.getElementById("show-cursor").checked === true;
       document.getElementById(
         "start-link"
-      ).href = `demo.html?music=${musicEnabled}&clear-effects=${clearEffects}&show-audio=${showAudio}&debug=${showDebug}&show-textures=${showTextures}&show-events=${showEvents}`;
+      ).href = `demo.html?music=${musicEnabled}&clear-effects=${clearEffects}&show-audio=${showAudio}&dev-tools=${showDevTools}&show-textures=${showTextures}&show-events=${showEvents}&show-cursor=${showCursor}`;
     }
     updateLink();
   </script>

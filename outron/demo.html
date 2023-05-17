@@ -2,11 +2,14 @@
 <html>
   <head>
     <title>OUTRON - DEMO</title>
+    <!--
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"
       integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
       crossorigin="anonymous"
     ></script>
+    -->
+    <script src="./src/matrix.js"></script>
     <script src="./src/timeline.js"></script>
     <script src="./src/events.js"></script>
     <script src="./src/palette.js"></script>
@@ -14,6 +17,7 @@
     <script src="./src/text.js"></script>
     <script src="./src/webgl.js"></script>
     <script src="./src/geometry.js"></script>
+    <script src="./src/canvas.js"></script>
     <script src="./src/demo.js"></script>
     <script id="vertex-shader-2d" type="x-shader/x-vertex">
 
@@ -77,6 +81,9 @@
     <div class="slide" style="mix-blend-mode: color-dodge">
       <section id="text"></section>
     </div>
+    <div class="slide" style="mix-blend-mode: color-dodge">
+      <section id="text-2"></section>
+    </div>
     <section id="vignette"></section>
     <section id="info" onclick="play()">CLICK TO START</section>
 
@@ -89,8 +96,18 @@
       <div id="debug-light-color-buttons"></div>
 
       <div>
-        <label for="text-input">Text: </label
-        ><input id="text-input" type="text" />
+        <label for="text-input">Text: </label>
+        <input id="text-input" type="text" />
+        <input id="text-duration-input" type="number" value="10" />
+        <select id="text-style">
+          <option value="METAL">METAL</option>
+          <option value="SUNSET">SUNSET</option>
+          <option value="SOLID_RED">SOLID RED</option>
+          <option value="SOLID_WHITE">SOLID WHITE</option>
+          <option value="PINK_STROKE">PINK STROKE</option>
+          <option value="SOLID_TEAL">SOLID TEAL</option>
+          <option value="SUNSET_STROKE">SUNSET STROKE</option>
+        </select>
         <input type="button" onclick="setTextSlideText()" value="Change" />
       </div>
     </section>
@@ -116,15 +133,19 @@
         ? url.searchParams.get("music") === "true"
         : true;
       const clearEffects = url.searchParams.get("clear-effects") === "true";
-      const showDebug = url.searchParams.get("debug") === "true";
+      const showDevTools = url.searchParams.get("dev-tools") === "true";
       const showAudio = url.searchParams.get("show-audio") === "true";
       const showTextures = url.searchParams.get("show-textures") === "true";
       const showEvents = url.searchParams.get("show-events") === "true";
+      const showCursor = url.searchParams.get("show-cursor") === "true";
 
-      if (showDebug === true) {
+      if (showDevTools === true) {
         document.getElementById("debug").style.display = "block";
-        document.getElementById("debug-events").style.display = "block";
         renderLightPaletteButtons();
+      }
+
+      if (showEvents === true) {
+        document.getElementById("debug-events").style.display = "block";
       }
 
       const audio = document.getElementById("music");
@@ -140,12 +161,14 @@
             .then(() => {
               demoPlaying = true;
               document.getElementById("info").style.display = "none";
-              document.getElementById("vignette").style.cursor = "none";
+              if (!showCursor) {
+                document.getElementById("vignette").style.cursor = "none";
+              }
               //document.getElementById("outron").style.opacity = 0.0;
               main({
                 musicEnabled,
                 clearEffects,
-                showDebug,
+                showDevTools,
                 showTextures,
                 showEvents,
               });
@@ -157,7 +180,7 @@
           demoPlaying = true;
           document.getElementById("info").style.display = "none";
           //document.getElementById("outron").style.opacity = 0.0;
-          main({ musicEnabled, clearEffects, showDebug });
+          main({ musicEnabled, clearEffects, showDevTools });
         }
       }
     }
@@ -194,7 +217,7 @@
       elementsTableBodyElement.innerHTML = "";
       timeline.events.forEach((event, index) => {
         const eventRowElement = document.createElement("tr");
-        eventRowElement.id = event.id + "row";
+        eventRowElement.id = event.id + "-row";
 
         const eventStartCellElement = document.createElement("td");
         eventStartCellElement.textContent = Math.floor(event.start);
@@ -230,11 +253,25 @@
         eventRemoveCellElement.textContent = "x";
         eventRemoveCellElement.onclick = (e) => {
           timeline.removeEventById(event.id);
-          document.getElementById(event.id + "row").remove();
+          document.getElementById(event.id + "-row").remove();
         };
         eventRowElement.appendChild(eventRemoveCellElement);
 
         elementsTableBodyElement.appendChild(eventRowElement);
+        /*
+        if (event.type === EVENT_TYPES.LIGHT_COLOR) {
+          const eventEditRowElement = document.createElement("tr");
+          eventEditRowElement.className = 'event-edit-row';
+          eventEditRowElement.id = event.id + "-row-edit";
+          const editEventCellElement = document.createElement("td");
+          lightPalette.forEach(color => {
+            const colorButton = 
+          })
+
+
+          eventEditRowElement.appendChild(editEventCellElement);
+          elementsTableBodyElement.appendChild(eventEditRowElement);
+        }*/
       });
     }
 
@@ -250,7 +287,7 @@
       const currentEvents = timeline.getCurrentEvents(now);
 
       currentEvents.forEach((event) => {
-        const currentEventElement = document.getElementById(event.id + "row");
+        const currentEventElement = document.getElementById(event.id + "-row");
         currentEventElement.className = "current";
         previousCurrentEventElements.push(currentEventElement);
       });
@@ -259,6 +296,10 @@
     function setTextSlideText() {
       //const textElement = document.getElementById("text");
       const text = document.getElementById("text-input").value;
+      const duration = parseInt(
+        document.getElementById("text-duration-input").value
+      );
+      const style = document.getElementById("text-style").value;
       /*
       textElement.innerHTML = textToSVG({
         text: newText.toUpperCase(),
@@ -269,7 +310,11 @@
       */
       eventToBeAdded = {
         type: EVENT_TYPES.TEXT,
-        params: { text },
+        params: {
+          text,
+          style,
+          duration,
+        },
       };
     }
   </script>
