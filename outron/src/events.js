@@ -8,7 +8,7 @@ const timelineEvents = [
     id: "text-97a9fef3",
     type: 9,
     start: 4009,
-    params: { text: "assembly 2023", style: "SUNSET", duration: 10 },
+    params: { text: "assembly 2023", style: "SOLID_RED", duration: 10 },
   },
   { id: "palette-5ce0d7d8", type: 1, start: 4017, params: { index: 0 } },
   { id: "light-color-75bbca79", type: 6, start: 4217, params: { index: 2 } },

@@ -45,6 +45,112 @@ function createIndexBuffer(gl, indices) {
   return buffer;
 }
 
+class ProgramInfo {
+  constructor({
+    gl,
+    vertexShaderId,
+    fragmentShaderId,
+    attributes = [],
+    uniforms = [],
+  }) {
+    this.gl = gl;
+    const vertexShaderSource = document.querySelector(
+      `#${vertexShaderId}`
+    ).text;
+    const fragmentShaderSource = document.querySelector(
+      `#${fragmentShaderId}`
+    ).text;
+
+    console.log("compiling:" + vertexShaderId);
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+    console.log("compiling:" + fragmentShaderId);
+    const fragmentShader = createShader(
+      gl,
+      gl.FRAGMENT_SHADER,
+      fragmentShaderSource
+    );
+
+    this.program = createProgram(gl, vertexShader, fragmentShader);
+    this.attributes = {};
+    this.uniforms = {};
+    this.buffers = {};
+
+    attributes.forEach((attribute) => {
+      this.addAttribute(attribute);
+    });
+    uniforms.forEach((uniform) => {
+      this.addUniform(uniform);
+    });
+  }
+
+  addAttribute(name) {
+    this.attributes[name] = this.gl.getAttribLocation(
+      this.program,
+      `a${name.charAt(0).toUpperCase()}${name.slice(1)}`
+    );
+  }
+
+  addUniform(name) {
+    this.uniforms[name] = this.gl.getUniformLocation(
+      this.program,
+      `u${name.charAt(0).toUpperCase()}${name.slice(1)}`
+    );
+  }
+
+  addBuffersFromGeometry(name, geometry) {
+    this.buffers[name] = {
+      geometry,
+      position:
+        geometry.vertices !== undefined
+          ? createBuffer(this.gl, geometry.vertices)
+          : undefined,
+      indices:
+        geometry.indices !== undefined
+          ? createIndexBuffer(this.gl, geometry.indices)
+          : undefined,
+      textureCoord:
+        geometry.textureCoord !== undefined
+          ? createBuffer(this.gl, geometry.textureCoord)
+          : undefined,
+    };
+  }
+}
+
+function drawGeometry(gl, buffers, programInfo) {
+  setPositionAttribute(gl, buffers.position, programInfo);
+  if (buffers.textureCoord) {
+    setTextureAttribute(gl, buffers.textureCoord, programInfo);
+  }
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
+  gl.drawElements(
+    gl.TRIANGLES,
+    buffers.geometry.indices.length,
+    gl.UNSIGNED_SHORT,
+    0
+  );
+}
+
+// Tell WebGL how to pull out the positions from the position
+// buffer into the vertexPosition attribute.
+function setPositionAttribute(gl, position, programInfo) {
+  const numComponents = 3; // pull out 2 values per iteration
+  const type = gl.FLOAT; // the data in the buffer is 32bit floats
+  const normalize = false; // don't normalize
+  const stride = 0; // how many bytes to get from one set of values to the next
+  // 0 = use type and numComponents above
+  const offset = 0; // how many bytes inside the buffer to start from
+  gl.bindBuffer(gl.ARRAY_BUFFER, position);
+  gl.vertexAttribPointer(
+    programInfo.attributes.vertexPosition,
+    numComponents,
+    type,
+    normalize,
+    stride,
+    offset
+  );
+  gl.enableVertexAttribArray(programInfo.attributes.vertexPosition);
+}
+
 //
 // Initialize a texture and load an image.
 // When the image finished loading copy it into the texture.
@@ -141,48 +247,6 @@ function createGridTexture(gl, width = 32, height = 32) {
   //gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 
   return texture;
-}
-
-function createAmbientLightTexture(gl, width = 32, height = 32) {
-  console.log(`generating shadow texture`);
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const context = canvas.getContext("2d");
-
-  context.globalAlpha = 1.0;
-  context.fillStyle = `rgb(196,196,196)`;
-  context.fillRect(0, 0, canvas.width, canvas.height);
-
-  for (let y = 0; y < canvas.height; y++) {
-    const value = Math.min(
-      1.0,
-      Math.max(0, 1.0 - easeOutCirc((y * 2) / canvas.height) / 1)
-    );
-    context.fillStyle = `rgba(0,0,0,${value})`;
-    context.fillRect(0, y, canvas.width, 1);
-  }
-
-  context.globalAlpha = 1.0;
-
-  for (let x = 0; x < canvas.width; x++) {
-    //const value = Math.min(1.0, Math.max(0, easeOutCirc(x / canvas.width)));
-    const value = x / canvas.width / 1.5;
-    context.fillStyle = `rgba(196,196,196,${value})`;
-    //
-    //context.globalAlpha = 1.0 - x / canvas.width;
-    context.fillRect(x, 0, 1, canvas.height);
-  }
-
-  const texture = gl.createTexture();
-
-  gl.bindTexture(gl.TEXTURE_2D, texture);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.ALPHA, gl.ALPHA, gl.UNSIGNED_BYTE, canvas);
-
-  //gl.generateMipmap(gl.TEXTURE_2D);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-
-  return { texture, canvas };
 }
 
 function createTexture(gl, width = 32, height = 32) {

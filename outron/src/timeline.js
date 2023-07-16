@@ -48,6 +48,8 @@ const EVENT_TYPES = {
   DISPLAY: 7,
   SHAKE: 8,
   TEXT: 9,
+  EFFECT: 10,
+  EFFECTFADE: 11,
   toString(type) {
     switch (type) {
       case EVENT_TYPES.HIT:
@@ -68,6 +70,10 @@ const EVENT_TYPES = {
         return "Shake";
       case EVENT_TYPES.TEXT:
         return "Text";
+      case EVENT_TYPES.EFFECT:
+        return "Effect";
+      case EVENT_TYPES.EFFECTFADE:
+        return "Effect Fade";
       default:
         return "?";
     }

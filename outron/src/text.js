@@ -57,11 +57,14 @@ const FONT1 = {
   8: `m1.3229-1.2667e-6c-0.66146 0-1.3229 0.66147-1.3229 1.3229v3.9688c0 0.66146 0.66146 1.3229 1.3229 1.3229-0.66146 0-1.3229 0.66146-1.3229 1.3229v3.9688c0 0.66146 0.66146 1.3229 1.3229 1.3229h10.583c0.66146 0 1.3229-0.66146 1.3229-1.3229v-3.9688c0-0.66145-0.66146-1.3229-1.3229-1.3229 0.66146 0 1.3229-0.66146 1.3229-1.3229v-3.9688c0-0.66145-0.66146-1.3229-1.3229-1.3229zm1.3229 2.6458h7.9375v2.6458h-7.9375zm0 5.2917h7.9375v2.6458h-7.9375z`,
   9: `m2.6458-9.6667e-7c-1.3229 0-2.6458 1.3229-2.6458 2.6458v2.6458c0 1.3229 1.3229 2.6458 2.6458 2.6458h7.9375v5.2917h2.6458v-11.906c0-0.66145-0.66146-1.3229-1.3229-1.3229zm0 2.6458h7.9375v2.6458h-7.9375z`,
   ".": `m2.7333e-6 10.583h2.6458v2.6458h-2.6458z`,
+  "!": `m0 0v7.9375h2.6458v-7.9375h-2.6458zm0 10.583v2.6458h2.6458v-2.6458h-2.6458z`,
   getCharacterWidth(c) {
     switch (c) {
       case "I":
         return 2.6458;
       case ".":
+        return 2.6458;
+      case "!":
         return 2.6458;
       case "1":
         return 2.6458 * 2;
@@ -78,19 +81,40 @@ function textToSVG({
   duration = 10,
   letterSpacing = 1.3229,
   fill,
+  charStyle,
   stroke,
   strokeWidth = 0.3,
   bloom = true,
+  animation = "text-ch-fadein",
+  shadowFill, // = "#f004",
+  delay,
 }) {
   let characters = "";
   let x = 0;
+
   [...text].forEach((c, index) => {
     if (FONT1[c] !== undefined) {
+      const style =
+        charStyle !== undefined
+          ? charStyle
+          : `opacity:0; animation: ${duration}s ease-in-out ${
+              delay !== undefined ? delay : index / 10
+            }s forwards ${animation}`;
+
+      if (shadowFill !== undefined) {
+        characters += `
+            <g 
+                style="${style}"
+                transform="translate(${x + 1} 1)" 
+                fill="${shadowFill}" 
+                >
+                <path d="${FONT1[c]}"/>   
+            </g>
+        `;
+      }
       characters += `
         <g 
-            style="opacity:0; animation: ${duration}s ease-in-out ${
-        index / 5
-      }s forwards text-ch-fadein"
+            style="${style}"
             transform="translate(${x} 0)" 
             fill="${fill || "none"}" 
             ${stroke ? `stroke="${stroke}" stroke-width="${strokeWidth}"` : ""}>
@@ -111,15 +135,15 @@ function textToSVG({
         <feGaussianBlur stdDeviation="0.50465728"/>
       </filter>
       <linearGradient id="gradient-ghost" x1="6.6146" x2="6.6146" y1="-2.6667e-7" y2="13.229" gradientUnits="userSpaceOnUse">
-        <stop stop-color="#fff" offset="0"/>
-        <stop stop-color="#fff" stop-opacity=".035294" offset=".7"/>
-        <stop stop-color="#fff" offset="1"/>
+        <stop stop-color="#fefefe" offset="0"/>
+        <stop stop-color="#fefefe" stop-opacity=".035294" offset=".7"/>
+        <stop stop-color="#fefefe" offset="1"/>
       </linearGradient>
       <linearGradient id="gradient-metal" x1="6.6146" x2="6.6146" y1="-2.6667e-7" y2="13.229" gradientUnits="userSpaceOnUse">
         <stop stop-color="#505050" offset="0"/>
-        <stop stop-color="#fff" offset=".65517"/>
+        <stop stop-color="#fefefe" offset=".65517"/>
         <stop stop-color="#4c4c4c" offset=".69655"/>
-        <stop stop-color="#fff" offset="1"/>
+        <stop stop-color="#fefefe" offset="1"/>
      </linearGradient>
      <linearGradient id="gradient-sunset" x1="6.6146" x2="6.6146" y1="-2.6667e-7" y2="13.229" gradientUnits="userSpaceOnUse">
        <stop stop-color="#f04" offset="0"/>
@@ -145,8 +169,8 @@ const TEXT_STYLES = {
     stroke: "#f0f",
   },
   SOLID_WHITE: {
-    fill: "#fff",
-    stroke: "#fff",
+    fill: "#fefefe",
+    stroke: "#fefefe",
   },
   SOLID_TEAL: {
     fill: "#0de",

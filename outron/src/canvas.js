@@ -1,3 +1,46 @@
+function createAmbientLightCanvas(gl, width = 32, height = 32) {
+  console.log(`generating shadow texture`);
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d");
+
+  context.globalAlpha = 1.0;
+  context.fillStyle = `rgb(196,196,196)`;
+  context.fillRect(0, 0, canvas.width, canvas.height);
+
+  for (let y = 0; y < canvas.height; y++) {
+    const value = Math.min(
+      1.0,
+      Math.max(0, 1.0 - easeOutCirc((y * 2) / canvas.height) / 1)
+    );
+    context.fillStyle = `rgba(0,0,0,${value})`;
+    context.fillRect(0, y, canvas.width, 1);
+  }
+
+  context.globalAlpha = 1.0;
+
+  for (let x = 0; x < canvas.width; x++) {
+    //const value = Math.min(1.0, Math.max(0, easeOutCirc(x / canvas.width)));
+    const value = x / canvas.width / 1.5;
+    context.fillStyle = `rgba(196,196,196,${value})`;
+    //
+    //context.globalAlpha = 1.0 - x / canvas.width;
+    context.fillRect(x, 0, 1, canvas.height);
+  }
+  /*
+  const texture = gl.createTexture();
+
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.ALPHA, gl.ALPHA, gl.UNSIGNED_BYTE, canvas);
+
+  //gl.generateMipmap(gl.TEXTURE_2D);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+  return { texture, canvas };*/
+  return canvas;
+}
+
 function createTunnelLightCanvas1(gl, width = 32, height = 32) {
   console.log(`generating shadow texture`);
   const canvas = document.createElement("canvas");
@@ -360,4 +403,139 @@ function generateGridToCanvas2(canvas, palette, now, hit, delta = 1) {
     context.globalAlpha = 1.0;
   */
   gridCounter += delta;
+}
+
+const lasers = [];
+for (let i = 0; i < 1; i++) {
+  lasers.push({
+    y: 0,
+    x: -10,
+    width: 10,
+    speed: 0,
+    color: [255, 255, 255],
+  });
+}
+
+let lazerHitLastId = undefined;
+let lazerKickLastId = undefined;
+let drawLasersX = 0;
+let drawLasersY = 0;
+
+function drawLasers(canvas, kick, kickId, hit, hitId, delta = 1, color, now) {
+  const context = canvas.getContext("2d");
+  context.fillStyle = `rgba(${Math.round(color[0] * 255)},${Math.round(
+    color[1] * 255
+  )},${Math.round(color[2] * 255)},0.1)`;
+  //context.globalAlpha = 0.1;
+  //context.clearRect(0, 0, canvas.width, canvas.height);
+  //context.globalAlpha = 1.0;
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  /*
+  if (hit) {
+    context.fillStyle = "rgba(255,255,255,1)";
+    context.fillRect(0, canvas.height / 2, canvas.width, 4);
+    context.fillStyle = "rgba(255,255,255,0.2)";
+    context.fillRect(0, canvas.height / 2 - 2, canvas.width, 10);
+    context.fillStyle = "rgba(255,255,255,0.2)";
+    context.fillRect(0, canvas.height / 2 - 4, canvas.width, 12);
+  } else {
+  }*/
+  /*
+  context.fillStyle = `rgba(${Math.round(color[0] * 255)},${Math.round(
+    color[1] * 255
+  )},${Math.round(color[2] * 255)},1)`;
+  */
+  //context.fillStyle = "rgba(0,0,0,1)";
+  context.fillStyle = "rgba(255,255,255,0.75)";
+
+  if (hit && hitId !== lazerHitLastId) {
+    const width = canvas.width / 4;
+    const height = canvas.height; // / 4;
+    //const x = Math.floor(((now % 200) / 200) * 7) * width;
+    //const y = Math.floor(((now % 300) / 300) * 7) * height;
+    //const x = Math.floor(Math.random() * 4) * width;
+    drawLasersX = (drawLasersX + width) % (width * 4);
+    const x = drawLasersX;
+    //const x = Math.floor(Math.random() * 4) * width;
+    const y = 0; //Math.floor(Math.random() * 4) * height;
+    //context.fillRect(x, y, width, height);
+    //context.beginPath();
+    //context.arc(x + width / 2, y + height / 2, width / 2, 0, 2 * Math.PI);
+    //context.fill();
+    context.fillRect(x, y, width, height);
+    /*
+    const path = new Path2D(
+      `m2.205-1.2667e-6 -2.205 2.205 4.4096 4.4096-4.4096 4.4096 2.205 2.205 4.4096-4.4096 4.4096 4.4096 2.205-2.205-4.4095-4.4096 4.4095-4.4096-2.205-2.205-4.4096 4.4095z`
+    );
+
+    context.fillStyle = "rgba(0,0,0,0.75)";
+    context.scale(10, 10);
+    context.fill(path);
+    context.scale(0.1, 0.1);*/
+  }
+
+  if (kick && kickId !== lazerKickLastId) {
+    const width = canvas.width; // / 4;
+    const height = canvas.height / 4;
+    //const x = Math.floor(((now % 200) / 200) * 7) * width;
+    //const y = Math.floor(((now % 300) / 300) * 7) * height;
+    const x = 0; //Math.floor(Math.random() * 4) * width;
+    drawLasersY = Math.floor(drawLasersY + height) % Math.floor(height * 4);
+    const y = drawLasersY;
+    //const y = Math.floor(Math.random() * 4) * height;
+    //context.fillRect(x, y, width, height);
+    //context.beginPath();
+    //context.arc(x + width / 2, y + height / 2, width / 2, 0, 2 * Math.PI);
+    //context.fill();
+    context.fillRect(x, y, width, height);
+  }
+
+  //context.fillStyle = "rgba(255,255,255,1)";
+
+  /*
+  lasers.forEach((laser) => {
+    if (laser.x + laser.width <= 0 && hit === true) {
+      laser.x = canvas.width;
+      laser.y = Math.random() * canvas.height;
+      laser.speed = 3 + Math.ceil(Math.random() * 3);
+      laser.width = 90 + Math.random() * 40;
+    }
+    context.fillRect(laser.x, laser.y - 3, laser.width, 7);
+    laser.x -= delta * laser.speed;
+  });
+  */
+  /*
+  lasers.forEach((laser) => {
+    if (laser.x <= 0 && hit === true) {
+      laser.x = canvas.width;
+      laser.y = 0;
+      laser.speed = 2; // + Math.ceil(Math.random() * 3);
+      laser.width = 4;
+    }
+    context.fillRect(laser.x - 3, 8, delta * laser.speed, canvas.height - 16);
+    laser.x -= delta * laser.speed;
+  });*/
+
+  lazerKickLastId = kickId;
+  lazerHitLastId = hitId;
+
+  context.globalAlpha = 0.2;
+  context.drawImage(canvas, -1, 0);
+  context.drawImage(canvas, 0, -1);
+  context.drawImage(canvas, 2, 0);
+  context.drawImage(canvas, 0, 2);
+  context.globalAlpha = 1;
+}
+
+function mergeCanvas(
+  target,
+  source,
+  globalCompositeOperation = "source-over",
+  alpha = 1.0
+) {
+  const targetContext = target.getContext("2d");
+  targetContext.globalAlpha = alpha;
+  targetContext.globalCompositeOperation = globalCompositeOperation;
+  targetContext.drawImage(source, 0, 0);
+  targetContext.globalAlpha = 1.0;
 }

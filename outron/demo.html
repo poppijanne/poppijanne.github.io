@@ -2,34 +2,34 @@
 <html>
   <head>
     <title>OUTRON - DEMO</title>
-    <!--
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"
-      integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
-      crossorigin="anonymous"
-    ></script>
-    -->
     <script src="./src/matrix.js"></script>
     <script src="./src/timeline.js"></script>
-    <script src="./src/events.js"></script>
+    <script src="./src/events3.js"></script>
     <script src="./src/palette.js"></script>
-    <script src="./src/stripe-generator.js"></script>
     <script src="./src/text.js"></script>
     <script src="./src/webgl.js"></script>
     <script src="./src/geometry.js"></script>
     <script src="./src/canvas.js"></script>
+    <script src="./src/effects.js"></script>
+    <script src="./src/effect-tunnel.js"></script>
+    <script src="./src/effect-meta-balls.js"></script>
+    <script src="./src/effect-rosebud.js"></script>
+    <script src="./src/effect-fractal-1.js"></script>
+    <script src="./src/effect-fractal-2.js"></script>
+    <script src="./src/effect-cyborg.js"></script>
     <script src="./src/demo.js"></script>
-    <script id="vertex-shader-2d" type="x-shader/x-vertex">
+
+    <!-- TUNNEL EFFECT SHADERS -->
+
+    <script id="tunnel-vertex-shader" type="x-shader/x-vertex">
 
       attribute vec4 aVertexPosition;
       attribute vec2 aTextureCoord;
 
       varying highp vec2 vTextureCoord;
-      varying highp float vZ;
 
       uniform mat4 uModelViewMatrix;
       uniform mat4 uProjectionMatrix;
-      uniform float uTime;
       uniform float uStretch;
 
       void main() {
@@ -37,33 +37,633 @@
         position.x += normalize(position.x) * uStretch;
         gl_Position = uProjectionMatrix * uModelViewMatrix * position;
         vTextureCoord = aTextureCoord;
-        vZ = aVertexPosition.z;
       }
     </script>
 
-    <script id="fragment-shader-2d" type="x-shader/x-fragment">
+    <script id="tunnel-fragment-shader" type="x-shader/x-fragment">
       precision mediump float;
 
       varying highp vec2 vTextureCoord;
-      varying highp float vZ;
-
       uniform sampler2D uSampler;
-      uniform float uTime;
-      uniform float uFogDepth;
-      uniform vec4 uFogColor;
+      uniform float uFlicker;
 
       void main() {
-        //float fog = min(1.0,max(0.0,(vZ+uFogDepth)/15.0));
-        //gl_FragColor = (texture2D(uSampler, vTextureCoord)+0.1) * fog + uFogColor * (1.0 - fog);
-        gl_FragColor = texture2D(uSampler, vTextureCoord);
+        gl_FragColor = texture2D(uSampler, vTextureCoord) + uFlicker;
       }
     </script>
-    <script></script>
+
+    <!-- META BALLS SHADERS -->
+
+    <script id="flat-vertex-shader" type="x-shader/x-vertex">
+
+      attribute vec4 aVertexPosition;
+
+      void main() {
+        gl_Position = aVertexPosition;
+      }
+    </script>
+
+    <script id="metaball-fragment-shader" type="x-shader/x-fragment">
+        precision mediump float;
+        uniform float uWidth, uHeight, uTime, uKickCounter, uHitCounter, uFlicker, uX;
+        uniform vec3 uLightPosition, uRayOrigin;
+        uniform vec4 uColor;
+        uniform float uNoise[24];
+
+        float smin( float a, float b, float k ) {
+          float h = clamp( 0.5+0.5*(b-a)/k, 0., 1. );
+          return mix( b, a, h ) - k*h*(1.0-h);
+        }
+
+        float getMetaBallsRayMarchGetDistance(vec3 point) {
+          float d = 50.;
+
+          for (int i=0; i < 12; i++) {
+              vec4 ball = vec4(0.,1., 5., .6 + uNoise[i+12] + uHitCounter + uKickCounter);
+              float fi = float(i); // because % is not supported
+
+              if (mod(fi,2.) == 0.) {
+                ball.x += uNoise[i]*2. + sin(uNoise[i] + uTime*.5);
+                ball.y += uNoise[i]*2. + cos(uNoise[i] + uTime*.3);
+                ball.z += uNoise[i] + sin(uNoise[i] + uTime*.7);
+              }
+              if (mod(fi,3.) == 1.) {
+                  ball.x += uNoise[i+12] + sin(uNoise[i] + uTime);
+                  ball.y += uNoise[i] + cos(uNoise[i] + uTime);
+                  ball.z += uNoise[i] + cos(uNoise[i] + uTime)*3.;
+              }
+              if (mod(fi,4.) == 2.) {
+                  ball.x += uNoise[i] - cos(uNoise[i+12] + uTime*2.) *3.;
+                  ball.yz += uNoise[i+12] + sin(uNoise[i+12] + uTime*2.) *3.;
+              }
+              if (mod(fi,5.) == 3.) {
+                  ball.xyz += uNoise[i] + sin(uNoise[i+12] + uTime*3.) *2.;
+              }
+              if (mod(fi,6.) == 4.) {
+                  ball.x += uNoise[i] + cos(uNoise[i+12] + uTime*4.) *2.;
+                  ball.yz += uNoise[i] - cos(uNoise[i+12] + uTime*4.) *2.;
+              }
+
+              float bf = length(point-ball.xyz)-ball.w;
+              d = smin(bf, d, .6);
+
+          }
+
+          return d;
+      }
+
+      vec3 getMetaBallsRayMarchGetNormal(vec3 point) {
+        float distance = getMetaBallsRayMarchGetDistance(point);
+        vec2 e = vec2(.01,0);
+        return normalize(distance - vec3(
+            getMetaBallsRayMarchGetDistance(point-e.xyy),
+            getMetaBallsRayMarchGetDistance(point-e.yxy),
+            getMetaBallsRayMarchGetDistance(point-e.yyx)));
+      }
+
+      vec2 getMetaBallsRayMarch(vec3 rayOrgin, vec3 rayDirection) {
+        float distance=0.;
+        for(int i=0; i<100; i++) {
+          vec3 point = rayOrgin + rayDirection * distance;
+          float surfaceDistance = getMetaBallsRayMarchGetDistance(point);
+          distance += surfaceDistance;
+          if (distance>27. || surfaceDistance<.01) break;
+        }
+        return vec2(distance,0);
+      }
+
+      float getMetaBallsGetLight(vec3 point, vec3 normal) {
+        vec3 direction = normalize(uLightPosition-point);
+        float dif = clamp(dot(normal, direction), 0., 1.);
+        vec2 d = getMetaBallsRayMarch(point+normal*.1, direction);
+        if ( d.x < length(uLightPosition-point)) {
+            dif *= 0.5;
+        } else {
+            dif -= d.y*.006;
+        }
+        return dif;
+      }
+
+      vec4 getMetaBalls(vec2 uv) {
+
+          vec4 col = vec4(0.);
+          //vec3 rayOrgin = vec3(0., 1., -1.);
+          //rayOrgin.xz *= rotate(uTime);
+
+          vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1));
+          vec2 d = getMetaBallsRayMarch(uRayOrigin, rayDirection);
+
+          if (d.x < 17.) {
+              vec3 p = uRayOrigin + rayDirection * d.x;
+              vec3 n = getMetaBallsRayMarchGetNormal(p);
+              float light = getMetaBallsGetLight(p, n) + .1;
+              col = vec4(light*uColor.r,uColor.g*light,uColor.b*light, 1.);
+              col.rgb += uColor.rgb * (1.0+n.z) * (0.2 + uFlicker);
+              col.rgb += uKickCounter;
+              col *= col + col + col;
+          }
+
+          return col;
+      }
+
+      void main() {
+        vec2 r = vec2(uWidth,uHeight);
+        vec2 uv = (gl_FragCoord.xy-.5*r.xy)/r.y;
+        gl_FragColor = getMetaBalls(uv);
+      }
+    </script>
+
+    <!-- ROSEBUD-->
+
+    <script id="rosebud-fragment-shader" type="x-shader/x-fragment">
+        precision mediump float;
+
+        uniform float uWidth ,uHeight, uTime, uKickCounter, uFlicker;
+        uniform vec4 uColor;
+
+        vec4 doBallEffect(vec2 uv, float time) {
+
+          float kickAdd = (uKickCounter > 0. ? uKickCounter * .1 : 0.);
+
+          float val = max(pow(sqrt(dot(uv,uv)-.05-kickAdd),.5), 0.2 );
+          uv /= val;
+
+          vec3 rayOrgin = vec3(0, 3.+sin(time)*2., mod(time,4.));
+          vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1));
+
+          float d = 0.;
+          vec4 sphere = vec4(2, 2, 1, 1);
+
+          for(int i=0; i<11; i++) {
+            vec3 point = rayOrgin + rayDirection * d;
+            vec3 spoint = mod(point, 4.);
+
+            float sphereDist = length(spoint-sphere.xyz)-sphere.w;
+            float planeDist = point.y;
+
+            float surfaceDistance = min(sphereDist, planeDist);
+            d += surfaceDistance;
+            if (d > 40. || surfaceDistance<.1) break;
+          }
+
+          // color
+          vec3 col = vec3(1.-(d/20.));
+          col *= uColor.rgb * 1.3;
+          col *= col;
+          col += 0.05;
+          return vec4(col.r,col.g,col.b ,1.0) / (1.0 + val * 0.5);
+
+      }
+
+        void main() {
+
+          vec2 r = vec2(uWidth,uHeight);
+          vec2 uv = (gl_FragCoord.xy-.5*r.xy)/r.y;
+          gl_FragColor = doBallEffect( uv, uTime*5.+(uKickCounter > 0. ? uKickCounter * .1 : 0.)) + uFlicker;
+        }
+    </script>
+
+    <!-- FRACTAL 1 -->
+
+    <script id="fractal-1-fragment-shader" type="x-shader/x-fragment">
+      precision mediump float;
+
+      uniform float uWidth, uHeight, uTime, uKickCounter, uFlicker;
+      uniform mat2 uRotate1, uRotate2;
+      uniform vec4 uColor;
+
+      // shader effects start helper functions
+      mat2 rotate(float a) {
+        float s = sin(a);
+        float c = cos(a);
+        return mat2(c, -s, s, c);
+      }
+
+      // does fly in the factal and rotates the camera
+      vec4 doFractalEffect(vec4 fragCoord, vec2 iResolution) {
+        vec4 o;
+        float e,g,v, s = 2.,t = uTime+sin(uTime);
+
+
+         for(float i=0.;i<35.;i++){
+            v=2.;
+            vec3 p = vec3((fragCoord.xy*v-iResolution.xy)/iResolution.y*g,g);
+            p.yz *= rotate(.1 + uTime*0.1);
+            //p.yz *= uRotate1;
+            p.y -= .45 + sin(t)*.01;
+            //p.xy *= rotate(.1);
+            p.xy *= uRotate2;
+            for(int j=0; j<7 ; j++)
+                p.xz = length(p.xz) * vec2(cos(e=fract(atan(p.x,p.z)*.7+(j<2?t/3.:s))-.5),e),
+                v/=e=clamp(dot(p,p),.1,.52),
+                p=abs(p)/e-vec3(.3,3,0);
+            g+=e=(p.x)/v;
+            o+=.02/exp(e*3e4);
+        }
+
+        //vec4 col = vec4(vec3(o.x*uColor.r+e*196., o.y*uColor.g+e*0.01, o.z*uColor.b+e*0.001),1.0) * 1.2 + 0.1;
+        //vec4 col = vec4(vec3(o.x*uColor.r+e*196., o.y*uColor.g+e*0.01, o.z*uColor.b+e*0.001),1.0) * 1.2 + 0.1;
+        vec4 col = vec4(vec3(o.x*uColor.r*0.9+e*196.*uKickCounter, o.y*uColor.g, o.z*uColor.b),1.0) * 1.2 + 0.4;
+
+        //return vec4(vec3(o.x*0.5+e*196., o.y*0.5+e*0.01, o.z*0.8+e*0.001),1.0) * 1.2 + 0.1;
+        return col * col * col + uFlicker;
+        //return vec4(vec3(o.x+e*522., o.y+g, o.z+ g*3.),1.0);
+      }
+
+      void main() {
+
+        vec2 r = vec2(uWidth,uHeight);
+        gl_FragColor = doFractalEffect( gl_FragCoord, r);
+      }
+    </script>
+
+    <!-- FRACTAL 2-->
+
+    <script id="fractal-2-fragment-shader" type="x-shader/x-fragment">
+      precision mediump float;
+
+      uniform float uWidth, uHeight, uTime, uKickCounter, uFlicker;
+      uniform vec4 uColor;
+
+      mat2 rotate(float a) {
+        float s = sin(a);
+        float c = cos(a);
+        return mat2(c, -s, s, c);
+      }
+
+      vec4 doBallFractal(vec4 fragCoord, vec2 r, float time) {
+        vec3 point,color;
+        float e,g,S,u;
+        for(float i=0.;i<9.;i++){
+
+            float zoom = 0.05 + sin(time) * 0.9;
+            point=vec3((fragCoord.xy-.5*r.xy)/r.y*g,g-zoom);
+            point.xz*=rotate(time*.2);
+            point.xy*=rotate(time*.5);
+            point--;
+            S=6.;
+
+            for(int j=0;j<10;j++) {
+                u = dot(point,point)*(.7-(1.0/5.0));
+                S /= u;
+                point /= u;
+                point = abs(point+.99999)-.999999;
+            }
+            e = abs(point.y)/S;
+            g += e;
+          }
+
+          color += normalize(++point).y;
+
+          //color += point*.05;
+          //color.r += e;
+          //color.b += e;
+          /*
+          color.r *= 2.0;
+          color.g *= 0.7;
+          color.b *= 0.6;// + 0.5;
+          color.b += 0.1;*/
+          color *= uColor.rgb;
+
+        return vec4(color, 1.);
+      }
+
+      void main() {
+        vec2 r = vec2(uWidth, uHeight);
+        vec2 uv = (gl_FragCoord.xy-.5*r.xy)/r.y;
+
+        gl_FragColor = doBallFractal(gl_FragCoord, r, uTime) + uFlicker + uKickCounter;
+      }
+    </script>
+
+    <!-- WIP -->
+
+    <script id="vertex-shader" type="x-shader/x-vertex">
+
+      attribute vec4 aVertexPosition;
+      attribute vec2 aTextureCoord;
+
+      varying highp vec2 vTextureCoord;
+
+      uniform mat4 uModelViewMatrix;
+      uniform mat4 uProjectionMatrix;
+      //uniform float uTime;
+
+      void main() {
+        //vec4 position = vec4(aVertexPosition.xyz,1.0);
+        //gl_Position = uProjectionMatrix * uModelViewMatrix * position;
+        //vTextureCoord = aTextureCoord;
+        gl_Position = vec4(aVertexPosition, 1.0);
+        vTextureCoord = aTextureCoord;
+
+      }
+    </script>
+
+    <script id="fragment-shader" type="x-shader/x-fragment">
+        precision mediump float;
+
+        varying highp vec2 vTextureCoord;
+
+        uniform sampler2D uSampler;
+        uniform float w,h,uTime, kickCounter, effectNro, effectFade, effectFadeNro;
+        float effectvar = 0.;
+
+        // shader effects start helper functions
+        mat2 Rotate(float a) {
+          float s = sin(a);
+          float c = cos(a);
+          return mat2(c, -s, s, c);
+        }
+
+        float smin( float a, float b, float k ) {
+          float h = clamp( 0.5+0.5*(b-a)/k, 0., 1. );
+          return mix( b, a, h ) - k*h*(1.0-h);
+        }
+
+        float noiseInt(int p) {
+          float n = float(p) * 210.9524;
+          return sin(n*22.26346)*1.5 + cos(n*4.3354312)*.25 + sin(n*2.233)*.1;
+        }
+
+        float getMetaBallsRayMarchGetDistance(vec3 point, float time) {
+          float d = 50.;
+          int ITER = 18;
+
+          for (int i=0; i < 12; i++) {
+              float noise = noiseInt(i);
+              vec4 ball = vec4(0.,1., 5., .6 + noiseInt(i+ITER));
+              float fi = float(i); // because % is not supported
+              if (mod(fi,2.) == 0.) {
+                  ball.x += noiseInt(i)*2. + sin(noiseInt(i) + time*.5);
+                  ball.y += noiseInt(i)*2. + cos(noiseInt(i) + time*.3);
+                  ball.z += noiseInt(i) + sin(noiseInt(i) + time*.7);
+              }
+              if (mod(fi,3.) == 1.) {
+                  ball.x += noiseInt(i+ITER) + sin(noiseInt(i) + time);
+                  ball.y += noiseInt(i) + cos(noiseInt(i) + time);
+                  ball.z += noiseInt(i) + cos(noiseInt(i) + time)*3.;
+              }
+              if (mod(fi,4.) == 2.) {
+                  ball.x += noiseInt(i) - cos(noiseInt(i+ITER) + time*2.) *3.;
+                  ball.y += noiseInt(i+ITER) + sin(noiseInt(i+ITER) + time*2.) *3.;
+                  ball.z += noiseInt(i+ITER) + sin(noiseInt(i+ITER) + time*2.) *3.;
+              }
+              if (mod(fi,5.) == 3.) {
+                  ball.x += noiseInt(i) + sin(noiseInt(i+ITER) + time*3.) *2.;
+                  ball.y += noiseInt(i) + sin(noiseInt(i+ITER) + time*3.) *2.;
+                  ball.z += noiseInt(i) + sin(noiseInt(i+ITER) + time*3.) *2.;
+              }
+              if (mod(fi,6.) == 4.) {
+                   ball.x += noiseInt(i) + cos(noiseInt(i+ITER) + time*4.) *2.;
+                   ball.y += noiseInt(i) - cos(noiseInt(i+ITER) + time*4.) *2.;
+                   ball.z += noiseInt(i) - cos(noiseInt(i+ITER) + time*4.) *2.;
+              }
+
+              if (effectvar == 0.) {
+                float bf = length(point-ball.xyz)-ball.w;
+                d = smin(bf, d, .6);
+              } else {
+                float t = time *4.;
+                vec3 r = vec3(.5,.25 - noiseInt(i+ITER)*.1, .2 );
+                ball.yz *= Rotate(ball.w + t);
+                ball.xz *= Rotate(ball.w + t);
+                vec3 point2 = point - ball.xyz;
+                point2.z -= 5. + sin(t)*4.;
+                float x = length(point2.xz)-r.x;
+                float bf = length(vec2(x, point2.y))-r.y;
+                d = smin(bf, d, .6);
+              }
+          }
+
+          return d;
+      }
+
+      vec3 getMetaBallsRayMarchGetNormal(vec3 point, float time) {
+        float distance = getMetaBallsRayMarchGetDistance(point, time);
+        vec2 e = vec2(.01,0);
+        return normalize(distance - vec3(
+            getMetaBallsRayMarchGetDistance(point-e.xyy, time),
+            getMetaBallsRayMarchGetDistance(point-e.yxy, time),
+            getMetaBallsRayMarchGetDistance(point-e.yyx, time)));
+      }
+
+      vec2 getMetaBallsRayMarch(vec3 rayOrgin, vec3 rayDirection, float time) {
+        float distance=0.;int i;
+          for(int i=0; i<100; i++) {
+            vec3 point = rayOrgin + rayDirection * distance;
+              float surfaceDistance = getMetaBallsRayMarchGetDistance(point, time);
+              distance += surfaceDistance;
+              if(distance>27. || surfaceDistance<.01) break;
+          }
+          return vec2(distance,i);
+      }
+
+      float getMetaBallsGetLight(vec3 point, vec3 normal, vec3 lightPos, float time) {
+        vec3 direction = normalize(lightPos-point);
+        float dif = clamp(dot(normal, direction), 0., 1.);
+        vec2 d = getMetaBallsRayMarch(point+normal*.1, direction, time);
+        if ( d.x < length(lightPos-point)) {
+            dif *= 0.5;
+        } else {
+            dif -= d.y*.006;
+        }
+        return dif;
+      }
+
+      vec4 getMetaBalls(vec2 uv, float time) {
+
+          vec4 col = vec4(0.);
+          vec3 rayOrgin = vec3(0., 1, -1.);
+          rayOrgin.xz *= Rotate(time);
+
+          vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1));
+          vec2 d = getMetaBallsRayMarch(rayOrgin, rayDirection, time);
+
+          if (d.x < 27.) {
+              vec3 lightPos = vec3(1, 4, 3);
+              vec3 p = rayOrgin + rayDirection * d.x;
+              vec3 n = getMetaBallsRayMarchGetNormal(p, time);
+              float light = getMetaBallsGetLight(p, n, lightPos, time) + .1;
+              // color
+              //col = vec4(light*(0.75+n.b),light/5.0,light/2.0, 1.);
+              col = vec4(light*(1.5+n.b*2.0),light/(4.0),light/(2.0), 1.);
+              //col.r += n.r*.3;
+              //col.g += n.r*.1;
+              col *= col + col + col;
+              //col *= 2.0;
+
+          } else {
+              //col.r += d.y*.01;
+              //col.b += 0.5;
+              col = vec4(0.1,0.1,0.1,0.1);
+          }
+
+          col.r += 0.2;
+          col.b += 0.2;
+
+          return col;
+      }
+
+
+        // does fly in the factal and rotates the camera
+        vec4 doFractalEffect(vec4 fragCoord, vec2 iResolution, float time) {
+          vec4 o;
+          float e,g,v, s = 2.,t = time+sin(time);
+
+           for(float i=0.;i<40.;i++){
+              v=2.;
+              vec3 p = vec3((fragCoord.xy*v-iResolution.xy)/iResolution.y*g,g);
+              p.yz *= Rotate(.1 + time*0.1);
+              p.y -= .45 + sin(t)*.01;
+              p.xy *= Rotate(.1);
+              for(int j=0; j<7 ; j++)
+                  p.xz = length(p.xz) * vec2(cos(e=fract(atan(p.x,p.z)*.7+(j<2?t/3.:s))-.5),e),
+                  v/=e=clamp(dot(p,p),.1,.52),
+                  p=abs(p)/e-vec3(.3,3,0);
+              g+=e=p.x/v;
+              o+=.02/exp(e*3e4);
+          }
+
+          return vec4(vec3(o.x*0.5+e*196., o.y*0.5+e*0.01, o.z*0.8+e*0.001),1.0) * 1.2 + 0.1;
+          //return vec4(vec3(o.x+e*522., o.y+g, o.z+ g*3.),1.0);
+        }
+
+        vec4 doBallFractal(vec4 fragCoord, vec2 r, float time) {
+          vec3 point,color;
+          float e,g,S,u;
+          for(float i=0.;i<9.;i++){
+
+              float zoom = 0.05 + sin(time) * 0.9;
+              point=vec3((fragCoord.xy-.5*r.xy)/r.y*g,g-zoom);
+              point.xz*=Rotate(time*.2);
+              point.xy*=Rotate(time*.5);
+              point--;
+              S=6.;
+
+              for(int j=0;j<10;j++) {
+                  u = dot(point,point)*(.7-(1.0/5.0));
+                  S /= u;
+                  point /= u;
+                  point = abs(point+.99999)-.999999;
+              }
+              e = abs(point.y)/S;
+              g += e;
+           }
+
+           color += normalize(++point).y;
+
+           //color += point*.05;
+           //color.r += e;
+           //color.b += e;
+           color.r *= 2.0;
+           color.g *= 0.7;
+           color.b *= 0.6;// + 0.5;
+           color.b += 0.1;
+
+          return vec4(color, 1.);
+        }
+
+        vec4 doBallEffect(vec2 uv, float time) {
+
+          float kickAdd = (kickCounter > 0. ? kickCounter * .1 : 0.);
+
+          float val = max(pow(sqrt(dot(uv,uv)-.05-kickAdd),.5), 0.2 );
+          uv /= val;
+
+          vec3 rayOrgin = vec3(0, 3.+sin(time)*2., mod(time,4.));
+          vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1));
+
+          float d = 0.;
+          vec4 sphere = vec4(2, 2, 1, 1);
+
+          for(int i=0; i<11; i++) {
+            vec3 point = rayOrgin + rayDirection * d;
+              vec3 spoint = mod(point, 4.);
+
+              float sphereDist = length(spoint-sphere.xyz)-sphere.w;
+              float planeDist = point.y;
+
+              float surfaceDistance = min(sphereDist, planeDist);
+              d += surfaceDistance;
+              if(d > 40. || surfaceDistance<.1) break;
+          }
+
+          // color
+          vec3 col = vec3(1.-(d/20.));
+          col *= col;
+          col += 0.1;
+          //vec3 col = vec3(col.r*val, col.g, col.b);
+          //col.r += abs(uv.y*.5);
+          //col.b += abs(uv.x*.2);
+          //return vec4(col.r, col.g, val ,1.0);
+          //return vec4(col.r*0.5, col.g*1.5, col.b ,1.0) / (1.0 + val);
+          return vec4(col.r,col.g*1.1,col.b*1.5 ,1.0) / (1.0 + val * 0.5);
+
+      }
+
+        void main() {
+          //float fog = min(1.0,max(0.0,(vZ+uFogDepth)/15.0));
+          //gl_FragColor = (texture2D(uSampler, vTextureCoord)+0.1) * fog + uFogColor * (1.0 - fog);
+
+          vec2 r = vec2(w,h);
+          vec2 uv = (gl_FragCoord.xy-.5*r.xy)/r.y;
+
+          bool draweffect = true; // draw effect for this pixel
+          if (effectFadeNro != 0.) {
+            float timeOffset = (uTime - effectFade)*10.;
+
+            if (effectFadeNro == 1.) { // circle fadein.
+                if (length(uv) > timeOffset*timeOffset) {
+                  draweffect = false;
+                }
+            } else if (effectFadeNro == 2.) { // circle fadeout.
+              if (length(uv) < timeOffset*timeOffset) {
+                draweffect = false;
+              }
+            } else if (effectFadeNro == 3.) { // see through black
+                draweffect = true;
+            }
+          }
+
+          vec4 color;
+
+          if (effectNro == 1. && draweffect) {
+            // fractal effect
+            color = doFractalEffect( gl_FragCoord, r, (uTime+(kickCounter > 0. ? kickCounter * .01 : 0.))*4.);
+          } else if (effectNro == 2. && draweffect) {
+            // ball
+            color = doBallEffect( uv, uTime*5.+(kickCounter > 0. ? kickCounter * .1 : 0.));
+          } else if (effectNro == 3. && draweffect) {
+            effectvar = 0.;
+            color = getMetaBalls(uv, (uTime+(kickCounter > 0. ? kickCounter * .01 : 0.))*1.5);
+          } else if (effectNro == 4. && draweffect) {
+            effectvar = 1.;
+            color = getMetaBalls(uv, (uTime+(kickCounter > 0. ? kickCounter * .01 : 0.))*1.5);
+          } else if (effectNro == 5. && draweffect) {
+            color = doBallFractal(gl_FragCoord, r, (uTime+(kickCounter > 0. ? kickCounter * .01 : 0.))*3.0);
+          } else {
+            color = texture2D(uSampler, vTextureCoord);
+          }
+
+
+
+          if (effectFadeNro == 3.) {  // if the color is black see the original effect through
+            //if (color.b < .0001 && color.r < .0001 && color.g < .0001) {
+            if (color.a < 0.2) {
+              color = texture2D(uSampler, vTextureCoord);
+            }
+          }
+
+          gl_FragColor = color;
+        }
+    </script>
+
     <link rel="stylesheet" href="demo.css" />
   </head>
   <body>
     <canvas id="webgl-canvas" width="480" height="480"></canvas>
-    <!--<section id="title">RADIATION</section>-->
+    <canvas id="webgl-canvas-2" width="480" height="480"></canvas>
+
     <div class="slide">
       <section id="outron" class="hidden">
         <image
@@ -73,16 +673,26 @@
         />
       </section>
     </div>
+
     <div class="slide">
       <section id="title" class="hidden">
         <image class="logo-animations" src="./img/title_3.svg" />
       </section>
     </div>
+
     <div class="slide" style="mix-blend-mode: color-dodge">
       <section id="text"></section>
     </div>
     <div class="slide" style="mix-blend-mode: color-dodge">
       <section id="text-2"></section>
+    </div>
+    <div class="slide" style="mix-blend-mode: screen">
+      <section id="text-3"></section>
+    </div>
+    <div class="slide">
+      <section id="cyborg" class="hidden">
+        <image id="cyborg-svg" src="./img/cyborg-1.svg" />
+      </section>
     </div>
     <section id="vignette"></section>
     <section id="info" onclick="play()">CLICK TO START</section>
@@ -99,7 +709,8 @@
         <label for="text-input">Text: </label>
         <input id="text-input" type="text" />
         <input id="text-duration-input" type="number" value="10" />
-        <select id="text-style">
+        <input id="text-delay-input" type="number" value="-1" />
+        <select id="text-style-input">
           <option value="METAL">METAL</option>
           <option value="SUNSET">SUNSET</option>
           <option value="SOLID_RED">SOLID RED</option>
@@ -108,24 +719,132 @@
           <option value="SOLID_TEAL">SOLID TEAL</option>
           <option value="SUNSET_STROKE">SUNSET STROKE</option>
         </select>
+        <select id="text-slide-input">
+          <option value="text">LAYER 1</option>
+          <option value="text-2">LAYER 2</option>
+          <option value="text-3">LAYER 3</option>
+        </select>
+        <select id="text-animation-input">
+          <option value="text-ch-fadein">FADE 1</option>
+          <option value="text-ch-fadein-2">FADE 2</option>
+        </select>
         <input type="button" onclick="setTextSlideText()" value="Change" />
+      </div>
+      <div>
+        <label for="display-element-id-input">Element ID: </label>
+        <select id="display-element-id-input">
+          <option value="outron">OUTRON logo</option>
+          <option value="webgl-canvas">Canvas</option>
+          <option value="webgl-canvas-2">Canvas 2</option>
+          <option value="text">Text Layer 1</option>
+          <option value="text-2">Text Layer 2</option>
+          <option value="text-3">Text Layer 3</option>
+          <option value="title">Demo title</option>
+          <option value="cyborg">Cyborg</option>
+        </select>
+        <label for="display-element-class-input">new class: </label>
+        <select id="display-element-class-input">
+          <option value="fade-in">fade in</option>
+          <option value="fade-out">fade out</option>
+          <option value="blur-in">blur in</option>
+          <option value="blur-out">blur out</option>
+          <option value="blur">blur</option>
+          <option value="blur-fast">blur fast</option>
+          <option value="hue-rotate">rotate hue</option>
+          <option value="saturate">saturate</option>
+          <option value="brightness">brightness</option>
+          <option value="zoom-in">zoom in</option>
+          <option value="zoom-out">zoom out</option>
+        </select>
+        <input type="button" onclick="changeElementClass()" value="Change" />
       </div>
     </section>
 
     <section id="debug-events">
-      <table>
-        <tbody id="debug-events-table-body"></tbody>
-      </table>
+      <div>
+        <label
+          ><input
+            id="debug-events-show-only-current-events-checkbox"
+            type="checkbox"
+          />
+          show only current events</label
+        >
+      </div>
+      <div id="debug-events-table">
+        <table style="width: 100%">
+          <tbody id="debug-events-table-body"></tbody>
+        </table>
+      </div>
     </section>
 
-    <audio id="music" controls src="./audio/OUTRON_42_00.mp3"></audio>
+    <dialog id="edit-event-dialog">
+      <form>
+        <div>
+          <label>ID: </label>
+          <input id="edit-event-id" type="text" />
+        </div>
+        <br />
+        <div>
+          <label>Time: </label>
+          <input id="edit-event-time" type="number" />
+        </div>
+        <br />
+        <div>
+          <label>Type: </label>
+          <select id="edit-event-type">
+            <option value="1">Tunnel Palette / Variation</option>
+            <option value="2">Tunnel Texture</option>
+            <option value="3">Tunnel Stretch</option>
+            <option value="4">Hit</option>
+            <option value="5">Kick</option>
+            <option value="6">Light Color</option>
+            <option value="7">Display (element class)</option>
+            <option value="9">Text</option>
+            <option value="10">Change Effect</option>
+          </select>
+        </div>
+        <br />
+        <label>Parameters:</label>
+        <div>
+          <textarea
+            id="edit-event-json"
+            style="width: 500px; height: 150px"
+          ></textarea>
+        </div>
+        <div>
+          <button value="cancel" formmethod="dialog">Cancel</button>
+          <button
+            id="edit-event-save-button"
+            value="default"
+            formmethod="dialog"
+          >
+            Save
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <audio id="music" controls src="./audio/OUTRON_49_02.mp3"></audio>
+    <!--<audio id="music" controls src="./audio/Farewell.mp3"></audio>-->
   </body>
   <script>
-    document.getElementById("text-input").onkeydown = (event) => {
-      event.stopPropagation(true);
-    };
+    const inputElements = document.getElementsByTagName("input");
+    for (let i = 0; i < inputElements.length; i++) {
+      console.log(inputElements.item(i).id);
+      inputElements.item(i).onkeydown = (event) => {
+        event.stopPropagation(true);
+      };
+    }
 
     let demoPlaying = false;
+
+    /*
+    document.getElementById("slogan").innerHTML = textToSVG({
+      text: "WAKE UP",
+      charStyle: "",
+      fill: TEXT_STYLES.SOLID_RED.fill,
+      stroke: TEXT_STYLES.SOLID_RED.stroke,
+    });*/
 
     function play() {
       const url = new URL(document.location);
@@ -210,14 +929,33 @@
       }
     }
 
-    function renderEvents(timeline) {
+    function renderEvents(timeline, now) {
+      const showOnlyCurrentEvents = document.getElementById(
+        "debug-events-show-only-current-events-checkbox"
+      ).checked;
       const elementsTableBodyElement = document.getElementById(
         "debug-events-table-body"
       );
+
+      if (now === undefined) {
+        now = document.getElementById("music").currentTime * 1000;
+      }
+
       elementsTableBodyElement.innerHTML = "";
+
+      const currentEvents = timeline.getCurrentEvents(now);
+
       timeline.events.forEach((event, index) => {
         const eventRowElement = document.createElement("tr");
         eventRowElement.id = event.id + "-row";
+
+        if (showOnlyCurrentEvents) {
+          if (currentEvents.find((e) => e.id === event.id)) {
+            eventRowElement.style.display = null;
+          } else {
+            eventRowElement.style.display = "none";
+          }
+        }
 
         const eventStartCellElement = document.createElement("td");
         eventStartCellElement.textContent = Math.floor(event.start);
@@ -230,6 +968,21 @@
 
         const eventIdCellElement = document.createElement("td");
         eventIdCellElement.textContent = event.id;
+        eventIdCellElement.onclick = (e) => {
+          document.getElementById("edit-event-id").value = event.id;
+          document.getElementById("edit-event-time").value = event.start;
+          document.getElementById("edit-event-type").value = event.type;
+          document.getElementById("edit-event-json").value =
+            event.params === undefined
+              ? ""
+              : JSON.stringify(event.params, null, 2);
+          document.getElementById("edit-event-save-button").onclick = () => {
+            event.params = JSON.parse(
+              document.getElementById("edit-event-json").value
+            );
+          };
+          document.getElementById("edit-event-dialog").show();
+        };
         eventRowElement.appendChild(eventIdCellElement);
 
         const eventTypeCellElement = document.createElement("td");
@@ -244,6 +997,40 @@
             eventParamsCellElement.style.backgroundColor = `rgb(${
               color[0] * 255
             },${color[1] * 255},${color[2] * 255})`;
+            break;
+          }
+          case EVENT_TYPES.TEXT: {
+            const color = lightPalette[event.params.index];
+            eventParamsCellElement.textContent = `${event.params.text} (${event.params.slide})`;
+            eventParamsCellElement.style.color =
+              TEXT_STYLES[event.params.style].fill;
+            break;
+          }
+          case EVENT_TYPES.DISPLAY: {
+            eventParamsCellElement.textContent = event.params.id;
+            break;
+          }
+          case EVENT_TYPES.EFFECT: {
+            eventParamsCellElement.textContent = Object.values(EFFECT).find(
+              (effect) => effect.id === event.params.id
+            ).name;
+            break;
+          }
+          case EVENT_TYPES.PALETTE: {
+            eventParamsCellElement.textContent = event.params.index;
+            break;
+          }
+          case EVENT_TYPES.TEXTURE: {
+            switch (event.params.texture) {
+              case TEXTURES.STRIPES:
+                eventParamsCellElement.textContent = "Stripes";
+                break;
+              case TEXTURES.GRID:
+                eventParamsCellElement.textContent = "Grid";
+                break;
+            }
+
+            break;
           }
         }
         eventRowElement.appendChild(eventParamsCellElement);
@@ -265,7 +1052,7 @@
           eventEditRowElement.id = event.id + "-row-edit";
           const editEventCellElement = document.createElement("td");
           lightPalette.forEach(color => {
-            const colorButton = 
+            const colorButton =
           })
 
 
@@ -278,8 +1065,15 @@
     let previousCurrentEventElements = [];
 
     function updateEvents(timeline, now) {
+      const showOnlyCurrentEvents = document.getElementById(
+        "debug-events-show-only-current-events-checkbox"
+      ).checked;
+
       previousCurrentEventElements.forEach((element) => {
         element.className = "";
+        if (showOnlyCurrentEvents) {
+          element.style.display = "none";
+        }
       });
 
       previousCurrentElements = [];
@@ -289,6 +1083,9 @@
       currentEvents.forEach((event) => {
         const currentEventElement = document.getElementById(event.id + "-row");
         currentEventElement.className = "current";
+        if (showOnlyCurrentEvents) {
+          currentEventElement.style.display = null;
+        }
         previousCurrentEventElements.push(currentEventElement);
       });
     }
@@ -299,21 +1096,35 @@
       const duration = parseInt(
         document.getElementById("text-duration-input").value
       );
-      const style = document.getElementById("text-style").value;
-      /*
-      textElement.innerHTML = textToSVG({
-        text: newText.toUpperCase(),
-        //fillColor: "#f0f",
-        fill: "url(#gradient-metal)",
-        stroke: "url(#gradient-ghost)",
-      });
-      */
+      const delay = parseInt(document.getElementById("text-delay-input").value);
+      const style = document.getElementById("text-style-input").value;
+      const slide = document.getElementById("text-slide-input").value;
+      const animation = document.getElementById("text-animation-input").value;
+
       eventToBeAdded = {
         type: EVENT_TYPES.TEXT,
         params: {
           text,
           style,
+          slide,
+          delay: !isNaN(delay) && delay !== -1 ? delay : undefined,
           duration,
+          animation,
+        },
+      };
+    }
+
+    function changeElementClass() {
+      const id = document.getElementById("display-element-id-input").value;
+      const className = document.getElementById(
+        "display-element-class-input"
+      ).value;
+
+      eventToBeAdded = {
+        type: EVENT_TYPES.DISPLAY,
+        params: {
+          id,
+          className,
         },
       };
     }
