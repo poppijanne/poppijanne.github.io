@@ -1,7 +1,6 @@
 class RosebudEffect {
-  constructor({ id, canvas, display = true, clear = true }) {
+  constructor({ id, canvas, clear = true }) {
     this.id = id;
-    this.display = display;
     this.canvas = canvas;
     this.clear = clear;
     this.gl = this.canvas.getContext("webgl");
@@ -74,10 +73,6 @@ class RosebudEffect {
   }
 
   render(now = 0) {
-    if (!this.display) {
-      return;
-    }
-
     const gl = this.gl;
 
     let f = 1.0 - (now - this.kickStart) / this.kickLength;

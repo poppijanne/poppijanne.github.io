@@ -4,9 +4,8 @@ const TEXTURES = {
 };
 
 class TunnelEffect {
-  constructor({ id, canvas, display = true, layer, showTextures = false }) {
+  constructor({ id, canvas, showTextures = false }) {
     this.id = id;
-    this.display = display;
     this.canvas = canvas;
     this.gl = this.canvas.getContext("webgl");
 
@@ -209,10 +208,6 @@ class TunnelEffect {
   }
 
   render(now = 0, delta = 1) {
-    if (!this.display) {
-      return;
-    }
-
     const gl = this.gl;
 
     let stretch = 0;

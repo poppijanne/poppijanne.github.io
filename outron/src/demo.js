@@ -1,5 +1,6 @@
 // FULL SPECTRUM
 
+/*
 const EFFECT = {
   TUNNEL: { id: 0, name: "tunnel" },
   FRACTAL1: { id: 1, name: "fractal 1" },
@@ -8,6 +9,7 @@ const EFFECT = {
   FRACTAL2: { id: 4, name: "fractal 2" },
   CYBORG: { id: 5, name: "cyborg" },
 };
+*/
 
 let reportTime = false;
 let eventToBeAdded = undefined;
@@ -16,10 +18,6 @@ let fps = 0;
 
 // Used in fragment shader
 let kickCounter = 0;
-let effectNro = 0;
-let effectFade = 0;
-let effectFadeNro = 0;
-let effectFadeEventID = "";
 
 window.addEventListener("keydown", (event) => {
   console.log(event.key);
@@ -329,41 +327,35 @@ function main({ musicEnabled, clearEffects, showTextures, showEvents }) {
 
   const renderer = new EffectRenderer([
     new TunnelEffect({
-      id: EFFECT.TUNNEL.id,
+      id: "tunnel",
       display: false,
       canvas: canvas,
       showTextures,
     }),
     new RosebudEffect({
-      id: EFFECT.ROSEBUD.id,
+      id: "rosebud",
       display: false,
       canvas: canvas,
     }),
 
     new Fractal1Effect({
-      id: EFFECT.FRACTAL1.id,
+      id: "fractal 1",
       display: false,
       canvas: canvas,
     }),
-    /*
     new Fractal2Effect({
-      id: 1,
-      display: false,
-      canvas: canvas,
-    }),*/
-    new Fractal2Effect({
-      id: EFFECT.FRACTAL2.id,
+      id: "fractal 2",
       display: false,
       canvas: canvas,
     }),
     new MetaBallsEffect({
-      id: EFFECT.METABALLS.id,
+      id: "metaballs",
       display: false,
       canvas: canvas2,
       clear: true,
     }),
     new CyborgEffect({
-      id: EFFECT.CYBORG.id,
+      id: "cyborg",
       display: false,
       canvas: canvas2,
     }),
@@ -396,9 +388,8 @@ function main({ musicEnabled, clearEffects, showTextures, showEvents }) {
       let kick = false;
       let kickId = undefined;
       let kickStart = 0;
+      let effectsId;
       const kickLength = 400;
-
-      renderer.processEvents(currentEvents, now, delta);
 
       currentEvents.forEach((event) => {
         switch (event.type) {
@@ -439,27 +430,17 @@ function main({ musicEnabled, clearEffects, showTextures, showEvents }) {
             }
             break;
           case EVENT_TYPES.EFFECT:
-            effectNro = event.params.id;
-            renderer.displayEffect(event.params.id);
-            break;
-          case EVENT_TYPES.EFFECTFADE:
-            effectFadeNro = event.params.id;
-            if (effectFadeEventID !== event.id) {
-              effectFade = now;
-              effectFadeEventID = event.id;
-            }
-            //console.log(event.id, event.start, now, now - event.start);
-            if (effectFadeNro === 2 && now - event.start > 1000) {
-              // fadeouts needs to reset the situation after effect.. now hardcoded 1 sec
-              effectFadeNro = 3; // and this is the see through effect as a base
-            }
-
+            effectsId = event.params.id;
             break;
           default:
             break;
         }
       });
-      renderer.renderEffects(now, delta);
+
+      if (effectsId !== undefined) {
+        renderer.processEvents(effectsId, currentEvents, now, delta);
+        renderer.renderEffects(effectsId, now, delta);
+      }
     }
 
     if (showEvents) {

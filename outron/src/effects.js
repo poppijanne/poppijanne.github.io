@@ -1,44 +1,78 @@
+const EFFECTS = {
+  0: {
+    name: "tunnel + metaballs",
+    effects: ["tunnel", "metaballs"],
+  },
+  1: {
+    name: "fractal 1",
+    effects: ["fractal 1"],
+  },
+  2: {
+    name: "rosebud + metaballs",
+    effects: ["rosebud", "metaballs"],
+  },
+  3: {
+    name: "tunnel",
+    effects: ["tunnel"],
+  },
+  4: {
+    name: "fractal 2 + metaballs",
+    effects: ["fractal 2", "metaballs"],
+  },
+  5: {
+    name: "tunnel + cyborg",
+    effects: ["tunnel", "cyborg"],
+  },
+};
+
 class EffectRenderer {
   constructor(effects = []) {
     this.effects = effects;
     this.bodyElement = document.querySelector("body");
     this.step = 0;
   }
-  processEvents(events = [], now, delta) {
-    this.effects.forEach((effect) => {
-      if (effect.display) {
+  processEvents(effectsId, events = [], now, delta) {
+    EFFECTS[effectsId].effects.forEach((effectId) => {
+      const effect = this.effects.find((effect) => effect.id === effectId);
+      if (effect) {
         effect.processEvents(events, now, delta);
       }
     });
   }
 
-  displayEffect(id) {
-    const effect = this.effects.find((effect) => effect.id === id);
-    if (effect === undefined) {
-      console.error(`effect ${id} not found`);
-      return;
-    }
-    effect.display = true;
-    this.effects.forEach((e) => {
-      if (e.id !== effect.id && e.canvas === effect.canvas) {
-        e.display = false;
+  renderEffects(effectsId, now, delta) {
+    this.bodyElement.style.height = window.innerHeight + "px";
+
+    this.effects.forEach((effect) => {
+      if (effect.canvas) {
+        effect.canvas.isUsed = false;
       }
     });
-  }
 
-  hideEffect(id) {
-    const effect = this.effects.find((effect) => effect.id === id);
-    effect.display = false;
-  }
-
-  renderEffects(now, delta) {
-    this.bodyElement.style.height = window.innerHeight + "px";
-    this.effects.forEach((effect) => {
+    EFFECTS[effectsId].effects.forEach((effectId) => {
+      const effect = this.effects.find((effect) => effect.id === effectId);
       if (!effect.halfStep || this.step === 0) {
         this.renderEffect(effect, now, delta);
       }
+      if (effect.canvas) {
+        effect.canvas.isUsed = true;
+      }
     });
+
     this.step = (this.step + 1) % 2;
+
+    this.effects.forEach((effect) => {
+      if (effect.canvas) {
+        if (!effect.canvas.isUsed && effect.canvas.style.display !== "none") {
+          effect.canvas.style.display = "none";
+        } else if (
+          effect.canvas.isUsed &&
+          effect.canvas.style.display === "none"
+        ) {
+          effect.canvas.style.display = null;
+        }
+      }
+    });
   }
   renderEffect(effect, now, delta) {
     if (

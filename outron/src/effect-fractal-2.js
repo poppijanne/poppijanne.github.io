@@ -1,7 +1,6 @@
 class Fractal2Effect {
-  constructor({ id, canvas, display = true, clear = true }) {
+  constructor({ id, canvas, clear = true }) {
     this.id = id;
-    this.display = display;
     this.canvas = canvas;
     this.clear = clear;
     this.gl = this.canvas.getContext("webgl");
@@ -67,10 +66,6 @@ class Fractal2Effect {
   }
 
   render(now = 0) {
-    if (!this.display) {
-      return;
-    }
-
     const gl = this.gl;
 
     let f = Math.max(0, 1.0 - (now - this.kickStart) / this.kickLength);

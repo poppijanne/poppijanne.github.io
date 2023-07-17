@@ -1,7 +1,6 @@
 class MetaBallsEffect {
-  constructor({ id, canvas, display = true, clear = true }) {
+  constructor({ id, canvas, clear = true }) {
     this.id = id;
-    this.display = display;
     this.canvas = canvas;
     this.clear = clear;
     this.gl = this.canvas.getContext("webgl");
@@ -123,10 +122,6 @@ class MetaBallsEffect {
   }
 
   render(now = 0) {
-    if (!this.display) {
-      return;
-    }
-
     const gl = this.gl;
 
     let f = Math.max(0, 1.0 - (now - this.kickStart) / this.kickLength);
@@ -171,7 +166,7 @@ class MetaBallsEffect {
     rayOrigin.y *= s;
     rayOrigin.y *= c;
 
-    gl.uniform3f(this.programInfo.uniforms.lightPosition, 0, 0, 9);
+    gl.uniform3f(this.programInfo.uniforms.lightPosition, 0, 0, 11);
     gl.uniform3f(
       this.programInfo.uniforms.rayOrigin,
       rayOrigin.x,

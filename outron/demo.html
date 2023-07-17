@@ -825,13 +825,20 @@
     </dialog>
 
     <audio id="music" controls src="./audio/OUTRON_49_02.mp3"></audio>
-    <!--<audio id="music" controls src="./audio/Farewell.mp3"></audio>-->
   </body>
   <script>
     const inputElements = document.getElementsByTagName("input");
     for (let i = 0; i < inputElements.length; i++) {
       console.log(inputElements.item(i).id);
       inputElements.item(i).onkeydown = (event) => {
+        event.stopPropagation(true);
+      };
+    }
+
+    const textareaElements = document.getElementsByTagName("textarea");
+    for (let i = 0; i < textareaElements.length; i++) {
+      console.log(textareaElements.item(i).id);
+      textareaElements.item(i).onkeydown = (event) => {
         event.stopPropagation(true);
       };
     }
@@ -968,6 +975,8 @@
 
         const eventIdCellElement = document.createElement("td");
         eventIdCellElement.textContent = event.id;
+        eventIdCellElement.style.cursor = "pointer";
+        eventIdCellElement.style.textDecoration = "underline";
         eventIdCellElement.onclick = (e) => {
           document.getElementById("edit-event-id").value = event.id;
           document.getElementById("edit-event-time").value = event.start;
@@ -1011,9 +1020,7 @@
             break;
           }
           case EVENT_TYPES.EFFECT: {
-            eventParamsCellElement.textContent = Object.values(EFFECT).find(
-              (effect) => effect.id === event.params.id
-            ).name;
+            eventParamsCellElement.textContent = EFFECTS[event.params.id].name;
             break;
           }
           case EVENT_TYPES.PALETTE: {
@@ -1069,6 +1076,18 @@
         "debug-events-show-only-current-events-checkbox"
       ).checked;
 
+      const currentEvents = timeline.getCurrentEvents(now);
+
+      /*
+      if (
+        currentEvents.length === previousCurrentEventElements.length &&
+        currentEvents.every((event) =>
+          previousCurrentEventElements.includes(event)
+        )
+      ) {
+        return;
+      }*/
+
       previousCurrentEventElements.forEach((element) => {
         element.className = "";
         if (showOnlyCurrentEvents) {
@@ -1076,9 +1095,7 @@
         }
       });
 
-      previousCurrentElements = [];
-
-      const currentEvents = timeline.getCurrentEvents(now);
+      previousCurrentEventElements = [];
 
       currentEvents.forEach((event) => {
         const currentEventElement = document.getElementById(event.id + "-row");

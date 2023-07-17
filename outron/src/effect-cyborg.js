@@ -1,12 +1,11 @@
 class CyborgEffect {
-  constructor({ id, canvas, display = true, clear = true }) {
+  constructor({ id, canvas, clear = true }) {
     this.id = id;
-    this.display = display;
-    this.canvas = canvas;
     this.clear = clear;
+    this.canvas = canvas;
     this.gl = this.canvas.getContext("webgl");
 
-    this.bgColor = [0, 0, 0, 0.5];
+    this.bgColor = [0, 0, 0, 1];
 
     this.hit = false;
     this.hitId = undefined;
@@ -56,13 +55,6 @@ class CyborgEffect {
   }
 
   render(now = 0) {
-    if (!this.display) {
-      this.element.style.display = "none";
-      return;
-    }
-
-    this.element.style.display = "flex";
-
     const gl = this.gl;
 
     let f = 1.0 - (now - this.kickStart) / this.kickLength;
@@ -72,8 +64,7 @@ class CyborgEffect {
       (time + (this.kickCounter > 0 ? this.kickCounter * 0.01 : 0)) * 3.0;
 
     gl.viewport(0, 0, this.canvas.width, this.canvas.height);
-    gl.clearColor(this.bgColor[0], this.bgColor[1], this.bgColor[2], 0.0); // Clear to BG color, fully opaque
+    gl.clearColor(this.bgColor[0], this.bgColor[1], this.bgColor[2], 1.0); // Clear to BG color, fully opaque
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    this.element.style.display = "flex";
   }
 }
