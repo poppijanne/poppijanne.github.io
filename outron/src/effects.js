@@ -21,7 +21,27 @@ const EFFECTS = {
   },
   5: {
     name: "tunnel + cyborg",
-    effects: ["tunnel", "cyborg"],
+    effects: ["cyborg", "metacubes"],
+  },
+  6: {
+    name: "fractal 3 + metaballs",
+    effects: ["fractal 3", "metaballs"],
+  },
+  7: {
+    name: "tunnel + metacubes",
+    effects: ["tunnel", "metacubes"],
+  },
+  8: {
+    name: "fractal 2 + metacubes",
+    effects: ["fractal 2", "metacubes"],
+  },
+  9: {
+    name: "rosebud + metacubes",
+    effects: ["rosebud", "metacubes"],
+  },
+  10: {
+    name: "rosebud",
+    effects: ["rosebud"],
   },
 };
 

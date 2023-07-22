@@ -44,9 +44,9 @@ class CyborgEffect {
           break;
         case EVENT_TYPES.LIGHT_COLOR:
           const targetColor = lightPalette[event.params.index];
-          this.bgColor[0] = (this.bgColor[0] * 99 + targetColor[0]) / 100;
-          this.bgColor[1] = (this.bgColor[1] * 99 + targetColor[1]) / 100;
-          this.bgColor[2] = (this.bgColor[2] * 99 + targetColor[2]) / 100;
+          this.bgColor[0] = (this.bgColor[0] * 29 + targetColor[0]) / 30;
+          this.bgColor[1] = (this.bgColor[1] * 29 + targetColor[1]) / 30;
+          this.bgColor[2] = (this.bgColor[2] * 29 + targetColor[2]) / 30;
           break;
         default:
           break;
@@ -56,15 +56,35 @@ class CyborgEffect {
 
   render(now = 0) {
     const gl = this.gl;
-
+    let f = Math.max(0, 1.0 - (now - this.kickStart) / this.kickLength);
+    this.kickCounter = f;
+    const time = now * 0.0001;
+    const timePlusKick =
+      (time + (this.kickCounter > 0 ? this.kickCounter * 0.01 : 0)) * 40.0;
+    const flicker = (Math.sin(time * 300.0) + Math.cos(time * 200.0)) * 0.01;
+    /*
     let f = 1.0 - (now - this.kickStart) / this.kickLength;
     this.kickCounter = f;
     const time = now * 0.0001;
     const timePlusKick =
       (time + (this.kickCounter > 0 ? this.kickCounter * 0.01 : 0)) * 3.0;
-
+*/
     gl.viewport(0, 0, this.canvas.width, this.canvas.height);
-    gl.clearColor(this.bgColor[0], this.bgColor[1], this.bgColor[2], 1.0); // Clear to BG color, fully opaque
+    gl.clearColor(
+      Math.min(
+        1.0,
+        Math.max(0, this.bgColor[0] * 0.75 + flicker + this.kickCounter * 0.5)
+      ),
+      Math.min(
+        1.0,
+        Math.max(0, this.bgColor[1] * 0.75 + flicker + this.kickCounter * 0.5)
+      ),
+      Math.min(
+        1.0,
+        Math.max(0, this.bgColor[2] * 0.75 + flicker + this.kickCounter * 0.5)
+      ),
+      1.0
+    ); // Clear to BG color, fully opaque
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   }
 }

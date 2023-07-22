@@ -8,6 +8,8 @@ const EFFECT = {
   METABALLS: { id: 3, name: "metaballs" },
   FRACTAL2: { id: 4, name: "fractal 2" },
   CYBORG: { id: 5, name: "cyborg" },
+  FRACTAL3: { id: 6, name: "fractal 3" },
+  METACUBES: { id: 7, name: "metacubes" },
 };
 */
 
@@ -224,9 +226,9 @@ window.addEventListener("keydown", (event) => {
     // shader effects start (shift JKLM)
     case "J": // no effect. this is easier to calculate.
       eventToBeAdded = {
-        type: EVENT_TYPES.EFFECTFADE,
+        type: EVENT_TYPES.EFFECT,
         params: {
-          id: 0,
+          id: 7,
         },
       };
       break;
@@ -348,8 +350,19 @@ function main({ musicEnabled, clearEffects, showTextures, showEvents }) {
       display: false,
       canvas: canvas,
     }),
+    new Fractal3Effect({
+      id: "fractal 3",
+      display: false,
+      canvas: canvas,
+    }),
     new MetaBallsEffect({
       id: "metaballs",
+      display: false,
+      canvas: canvas2,
+      clear: true,
+    }),
+    new MetaCubesEffect({
+      id: "metacubes",
       display: false,
       canvas: canvas2,
       clear: true,
@@ -357,7 +370,7 @@ function main({ musicEnabled, clearEffects, showTextures, showEvents }) {
     new CyborgEffect({
       id: "cyborg",
       display: false,
-      canvas: canvas2,
+      canvas: canvas,
     }),
   ]);
 
