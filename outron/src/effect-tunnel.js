@@ -265,9 +265,9 @@ class TunnelEffect {
     gl.viewport(0, 0, this.canvas.width, this.canvas.height);
     gl.useProgram(this.programInfo.program);
     gl.clearColor(this.bgColor[0], this.bgColor[1], this.bgColor[2], 1.0); // Clear to BG color, fully opaque
-    gl.clearDepth(1.0); // Clear everything
-    gl.enable(gl.DEPTH_TEST); // Enable depth testing
-    gl.depthFunc(gl.LEQUAL); // Near things obscure far things
+    //gl.clearDepth(1.0); // Clear everything
+    //gl.enable(gl.DEPTH_TEST); // Enable depth testing
+    //gl.depthFunc(gl.LEQUAL); // Near things obscure far things
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     const fieldOfView = ((60 + Math.sin(now * 0.0001) * 20.0) * Math.PI) / 180; // in radians

@@ -66,126 +66,177 @@
     </script>
 
     <script id="metaball-fragment-shader" type="x-shader/x-fragment">
-        precision mediump float;
-        uniform float uWidth, uHeight, uTime, uKickCounter, uHitCounter, uFlicker, uX;
-        uniform vec3 uLightPosition, uRayOrigin;
-        uniform vec4 uColor;
-        uniform float uNoise[24];
+                          precision mediump float;
+                          uniform float uWidth, uHeight, uTime, uKickCounter, uHitCounter, uFlicker, uX;
+                          uniform vec3 uLightPosition, uRayOrigin;
+                          uniform vec4 uColor;
+                          uniform float uNoise[24];
 
-        float smin( float a, float b, float k ) {
-          float h = clamp( 0.5+0.5*(b-a)/k, 0., 1. );
-          return mix( b, a, h ) - k*h*(1.0-h);
-        }
+                          float smin( float a, float b, float k ) {
+                            float h = clamp( 0.5+0.5*(b-a)/k, 0., 1. );
+                            return mix( b, a, h ) - k*h*(1.0-h);
+                          }
 
-        float getMetaBallsRayMarchGetDistance(vec3 point) {
-          float d = 50.;
+                          float getMetaBallsRayMarchGetDistance(vec3 point) {
+                            float d = 50.;
 
-          for (int i=0; i < 12; i++) {
-              vec4 ball = vec4(0.,1., 5., .6 + uNoise[i+12] + uHitCounter + uKickCounter);
-              float fi = float(i); // because % is not supported
 
-              if (mod(fi,2.) == 0.) {
-                ball.x += uNoise[i]*2. + sin(uNoise[i] + uTime*.5);
-                ball.y += uNoise[i]*2. + cos(uNoise[i] + uTime*.3);
-                ball.z += uNoise[i] + sin(uNoise[i] + uTime*.7);
-              }
-              if (mod(fi,3.) == 1.) {
-                  ball.x += uNoise[i+12] + sin(uNoise[i] + uTime);
-                  ball.y += uNoise[i] + cos(uNoise[i] + uTime);
-                  ball.z += uNoise[i] + cos(uNoise[i] + uTime)*3.;
-              }
-              if (mod(fi,4.) == 2.) {
-                  ball.x += uNoise[i] - cos(uNoise[i+12] + uTime*2.) *3.;
-                  ball.yz += uNoise[i+12] + sin(uNoise[i+12] + uTime*2.) *3.;
-              }
-              if (mod(fi,5.) == 3.) {
-                  ball.xyz += uNoise[i] + sin(uNoise[i+12] + uTime*3.) *2.;
-              }
-              if (mod(fi,6.) == 4.) {
-                  ball.x += uNoise[i] + cos(uNoise[i+12] + uTime*4.) *2.;
-                  ball.yz += uNoise[i] - cos(uNoise[i+12] + uTime*4.) *2.;
-              }
+                            for (int i=0; i < 6; i++) {
+                              vec4 ball = vec4(0.,1., 5., .6 + uNoise[i+12] + uHitCounter + uKickCounter);
+                              //float fi = float(i); // because % is not supported
 
-              float bf = length(point-ball.xyz)-ball.w;
-              d = smin(bf, d, .6);
+                              if (i == 0) {
+                                ball.x += uNoise[i]*2. + sin(uNoise[i] + uTime*.5);
+                                ball.y += uNoise[i]*2. + cos(uNoise[i] + uTime*.3);
+                                ball.z += uNoise[i] + sin(uNoise[i] + uTime*.7);
+                              }
+                              else if (i == 1) {
+                                  ball.x += uNoise[i+12] + sin(uNoise[i] + uTime);
+                                  ball.y += uNoise[i] + cos(uNoise[i] + uTime);
+                                  ball.z += uNoise[i] + cos(uNoise[i] + uTime)*3.;
+                              }
+                              else if (i == 2) {
+                                  ball.x += uNoise[i] - cos(uNoise[i+12] + uTime*2.) *3.;
+                                  ball.yz += uNoise[i+12] + sin(uNoise[i+12] + uTime*2.) *3.;
+                              }
+                              else if (i == 3) {
+                                  ball.xyz += uNoise[i] + sin(uNoise[i+12] + uTime*3.) *2.;
+                              }
+                              else if (i == 4) {
+                                  ball.x += uNoise[i] + cos(uNoise[i+12] + uTime*4.) *2.;
+                                  ball.yz += uNoise[i] - cos(uNoise[i+12] + uTime*4.) *2.;
+                              }
+                              else if (i == 5) {
+                                  ball.xy += uNoise[i+12] + sin(uNoise[i+12] + uTime*3.);
+                                  ball.z += uNoise[i] - cos(uNoise[i+12] + uTime*2.) * 2.;
+                              }
+                              else if (i == 6) {
+                                ball.y += uNoise[i] + cos(uNoise[i+12] + uTime*1.5) * 3.;
+                                ball.xz += uNoise[i] - sin(uNoise[i+12] + uTime*2.) * 2.;
+                              }
+                              else if (i == 7) {
+                                ball.xy += uNoise[i] + cos(uNoise[i] + uTime*2.5) * 3.;
+                                ball.z += uNoise[i] - sin(uNoise[i] + uTime*3.5) * 2.;
+                              }
 
-          }
 
-          return d;
-      }
 
-      vec3 getMetaBallsRayMarchGetNormal(vec3 point) {
-        float distance = getMetaBallsRayMarchGetDistance(point);
-        vec2 e = vec2(.01,0);
-        return normalize(distance - vec3(
-            getMetaBallsRayMarchGetDistance(point-e.xyy),
-            getMetaBallsRayMarchGetDistance(point-e.yxy),
-            getMetaBallsRayMarchGetDistance(point-e.yyx)));
-      }
+                              float bf = length(point-ball.xyz)-ball.w;
+                              d = smin(bf, d, .6);
 
-      vec2 getMetaBallsRayMarch(vec3 rayOrgin, vec3 rayDirection) {
-        float distance=0.;
-        for(int i=0; i<100; i++) {
-          vec3 point = rayOrgin + rayDirection * distance;
-          float surfaceDistance = getMetaBallsRayMarchGetDistance(point);
-          distance += surfaceDistance;
-          if (distance>27. || surfaceDistance<.01) break;
-        }
-        return vec2(distance,0);
-      }
+                            }
 
-      float getMetaBallsGetLight(vec3 point, vec3 normal) {
-        vec3 direction = normalize(uLightPosition-point);
-        float dif = clamp(dot(normal, direction), 0., 1.);
-        vec2 d = getMetaBallsRayMarch(point+normal*.1, direction);
-        if ( d.x < length(uLightPosition-point)) {
-            dif *= 0.5;
-        } else {
-            dif -= d.y*.006;
-        }
-        return dif;
-      }
+      /*
 
-      vec4 getMetaBalls(vec2 uv) {
+                            for (int i=0; i < 7; i++) {
+                                vec4 ball = vec4(0.,1., 5., .6 + uNoise[i+12] + uHitCounter + uKickCounter);
+                                float fi = float(i); // because % is not supported
 
-          vec4 col = vec4(0.);
-          //vec3 rayOrgin = vec3(0., 1., -1.);
-          //rayOrgin.xz *= rotate(uTime);
+                                if (mod(fi,2.) == 0.) {
+                                  ball.x += uNoise[i]*2. + sin(uNoise[i] + uTime*.5);
+                                  ball.y += uNoise[i]*2. + cos(uNoise[i] + uTime*.3);
+                                  ball.z += uNoise[i] + sin(uNoise[i] + uTime*.7);
+                                }
+                                if (mod(fi,3.) == 1.) {
+                                    ball.x += uNoise[i+12] + sin(uNoise[i] + uTime);
+                                    ball.y += uNoise[i] + cos(uNoise[i] + uTime);
+                                    ball.z += uNoise[i] + cos(uNoise[i] + uTime)*3.;
+                                }
+                                if (mod(fi,4.) == 2.) {
+                                    ball.x += uNoise[i] - cos(uNoise[i+12] + uTime*2.) *3.;
+                                    ball.yz += uNoise[i+12] + sin(uNoise[i+12] + uTime*2.) *3.;
+                                }
+                                if (mod(fi,5.) == 3.) {
+                                    ball.xyz += uNoise[i] + sin(uNoise[i+12] + uTime*3.) *2.;
+                                }
+                                if (mod(fi,6.) == 4.) {
+                                    ball.x += uNoise[i] + cos(uNoise[i+12] + uTime*4.) *2.;
+                                    ball.yz += uNoise[i] - cos(uNoise[i+12] + uTime*4.) *2.;
+                                }
 
-          vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1));
-          vec2 d = getMetaBallsRayMarch(uRayOrigin, rayDirection);
 
-          if (d.x < 17.) {
-              vec3 p = uRayOrigin + rayDirection * d.x;
-              vec3 n = getMetaBallsRayMarchGetNormal(p);
-              float light = getMetaBallsGetLight(p, n) + .1;
-              col = vec4(light*uColor.r,uColor.g*light,uColor.b*light, 1.);
-              col.rgb += uColor.rgb * (1.0+n.z) * (0.2 + uFlicker);
-              col.rgb += uKickCounter;
-              col *= col + col + col;
-          }
+                                float bf = length(point-ball.xyz)-ball.w;
+                                d = smin(bf, d, .6);
 
-          return col;
-      }
+                            }
+      */
 
-      void main() {
-        vec2 r = vec2(uWidth,uHeight);
-        vec2 uv = (gl_FragCoord.xy-.5*r.xy)/r.y;
-        gl_FragColor = getMetaBalls(uv);
-      }
+
+                            return d;
+                        }
+
+                        vec3 getMetaBallsRayMarchGetNormal(vec3 point) {
+                          float distance = getMetaBallsRayMarchGetDistance(point);
+                          vec2 e = vec2(.01,0);
+                          return normalize(distance - vec3(
+                              getMetaBallsRayMarchGetDistance(point-e.xyy),
+                              getMetaBallsRayMarchGetDistance(point-e.yxy),
+                              getMetaBallsRayMarchGetDistance(point-e.yyx)));
+                        }
+
+                        vec2 getMetaBallsRayMarch(vec3 rayOrgin, vec3 rayDirection) {
+                          float distance=0.;
+                          for(int i=0; i<100; i++) {
+                            vec3 point = rayOrgin + rayDirection * distance;
+                            float surfaceDistance = getMetaBallsRayMarchGetDistance(point);
+                            distance += surfaceDistance;
+                            if (distance>27. || surfaceDistance<.01) break;
+                          }
+                          return vec2(distance,0);
+                        }
+
+                        float getMetaBallsGetLight(vec3 point, vec3 normal) {
+                          vec3 direction = normalize(uLightPosition-point);
+                          float dif = clamp(dot(normal, direction), 0., 1.);
+                          vec2 d = getMetaBallsRayMarch(point+normal*.1, direction);
+                          if ( d.x < length(uLightPosition-point)) {
+                              dif *= 0.5;
+                          } else {
+                              dif -= d.y*.006;
+                          }
+                          return dif;
+                        }
+
+                        vec4 getMetaBalls(vec2 uv) {
+
+                            vec4 col = vec4(0.);
+                            //vec3 rayOrgin = vec3(0., 1., -1.);
+                            //rayOrgin.xz *= rotate(uTime);
+
+                            vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1));
+                            vec2 d = getMetaBallsRayMarch(uRayOrigin, rayDirection);
+
+                            if (d.x < 17.) {
+                                vec3 p = uRayOrigin + rayDirection * d.x;
+                                vec3 n = getMetaBallsRayMarchGetNormal(p);
+                                float light = getMetaBallsGetLight(p, n) + .1;
+                                col = vec4(light*uColor.r,uColor.g*light,uColor.b*light, 1.);
+                                col.rgb += uColor.rgb * (1.0+n.z) * (0.2 + uFlicker);
+                                col.rgb += uKickCounter;
+                                col *= col + col + col;
+                            }
+
+                            return col;
+                        }
+
+                        void main() {
+                          vec2 r = vec2(uWidth,uHeight);
+                          vec2 uv = (gl_FragCoord.xy-.5*r.xy)/r.y;
+                          gl_FragColor = getMetaBalls(uv);
+                        }
     </script>
 
     <!-- META CUBES SHADERS -->
 
     <script id="metacubes-fragment-shader" type="x-shader/x-fragment">
         precision mediump float;
-        uniform float uWidth, uHeight, uTime, uKickCounter, uHitCounter, uFlicker, uX;
+        uniform float uWidth, uHeight, uTime, uKickCounter, uHitCounter, uFlicker;
         uniform vec3 uLightPosition, uRayOrigin;
         uniform vec4 uColor;
         uniform float uNoise[24];
 
         float smin( float a, float b, float k ) {
-          float h = clamp( 0.5+0.5*(b-a)/k, 0., 1. );
+          float h = clamp( 0.5 + 0.5 * (b-a)/k, 0., 1. );
           return mix( b, a, h ) - k*h*(1.0-h);
         }
 
@@ -198,10 +249,11 @@
         float getMetaCubesRayMarchGetDistance(vec3 point) {
           float d = 50.;
 
-          for (int i=0; i < 9; i++) {
+          for (int i=0; i < 7; i++) {
               vec4 ball = vec4(0.,1., 5., .6 + uNoise[i+12]*.5 + uHitCounter + uKickCounter);
-              float fi = float(i); // because % is not supported
+              //float fi = float(i); // because % is not supported
 
+              /*
               if (mod(fi,2.) == 0.) {
                 ball.x += uNoise[i]*1.7 + sin(uNoise[i] + uTime*.6);
                 ball.y += uNoise[i+5]*2.2 + cos(uNoise[i] + uTime*.4);
@@ -221,6 +273,32 @@
               if (mod(fi,5.) == 4.) {
                   ball.x += uNoise[i] + cos(uNoise[i+12] + uTime*4.) *2.;
                   ball.yz += uNoise[i] - cos(uNoise[i+12] + uTime*4.) *2.;
+              }
+              */
+              if (i == 0) {
+                ball.x += uNoise[i]*1.7 + sin(uNoise[i] + uTime*.6);
+                ball.y += uNoise[i+5]*2.2 + cos(uNoise[i] + uTime*.4);
+                ball.z += uNoise[i+2]*.9 + sin(uNoise[i+4] + uTime*.8);
+              }
+              else if (i == 1) {
+                ball.x += uNoise[i+12] + sin(uNoise[i] + uTime);
+                ball.y += uNoise[i] + cos(uNoise[i] + uTime);
+                ball.z += uNoise[i] + cos(uNoise[i] + uTime)*3.5;
+              }
+              else if (i == 2) {
+                  ball.x += uNoise[i] - cos(uNoise[i+12] + uTime*2.) *3.2;
+                  ball.yz += uNoise[i+12] + sin(uNoise[i+12] + uTime*2.) *3.2;
+              }
+              else if (i == 3) {
+                  ball.xyz += uNoise[i] + sin(uNoise[i+12] + uTime*3.) *2.;
+              }
+              else if (i == 5) {
+                  ball.x += uNoise[i] + cos(uNoise[i+12] + uTime*4.) *2.;
+                  ball.yz += uNoise[i] - cos(uNoise[i+12] + uTime*4.) *2.;
+              }
+              else if (i == 6) {
+                ball.x += uNoise[i] + cos(uNoise[i+12] + uTime*4.) *2.;
+                ball.yz += uNoise[i] - cos(uNoise[i+12] + uTime*4.) *2.;
               }
 
               //float bf = length(point-ball.xyz)-ball.w;
@@ -295,7 +373,7 @@
 
       void main() {
         vec2 r = vec2(uWidth,uHeight);
-        vec2 uv = (gl_FragCoord.xy-.5*r.xy)/r.y;
+        vec2 uv = (gl_FragCoord.xy -.5 * r.xy) / r.y;
         gl_FragColor = getMetaCubes(uv);
       }
     </script>
@@ -321,7 +399,7 @@
           float d = 0.;
           vec4 sphere = vec4(2, 2, 1, 1);
 
-          for(int i=0; i<11; i++) {
+          for(int i=0; i<14; i++) {
             vec3 point = rayOrgin + rayDirection * d;
             vec3 spoint = mod(point, 4.);
 
@@ -466,109 +544,111 @@
     <!-- FRACTAL 3-->
 
     <script id="fractal-3-fragment-shader" type="x-shader/x-fragment">
-        precision mediump float;
+      precision mediump float;
 
-        uniform float uWidth, uHeight, uTime, uKickCounter, uFlicker;
-        uniform vec4 uColor;
+      uniform float uWidth, uHeight, uTime, uKickCounter, uFlicker;
+      uniform vec4 uColor;
+      uniform float uRotator;
 
-        mat2 rotate(float a) {
-          float s = sin(a);
-          float c = cos(a);
-          return mat2(c, -s, s, c);
+      const vec3 lightPos = vec3(0, 0, 17);
+
+      mat2 rotate(float a) {
+        float s = sin(a);
+        float c = cos(a);
+        return mat2(c, -s, s, c);
+      }
+
+      float getFractalValue(vec2 uv, float angle) {
+        mat2 rotator = mat2( cos(angle), -sin(angle), sin(angle), cos(angle) );
+        rotator *= uRotator;
+        for (float i=0.; i < 14.; i+= 1.) {
+          uv = abs(uv);
+          uv -= .5 ;
+          uv *= rotator;
         }
-
-        float getFractalValue(vec2 uv, float angle) {
-          for (float i=0.; i < 14.; i+= 1.) {
-              uv = abs(uv);
-              uv -= .5 ;
-              uv *= (1.1 + sin(uTime*0.1)*0.4 + uKickCounter * 0.3);
-              uv *= mat2(
-                  cos(angle), -sin(angle), sin(angle), cos(angle)
-              );
-          }
-          return length(uv);
+        return length(uv);
       }
 
-      float GetDistance(vec3 point, float time) {
-          vec3 movingPoint = point;
-          movingPoint.z += time*2.;
+      float GetDistance(vec3 point) {
+        vec3 movingPoint = point;
+        movingPoint.z += uTime * 2.;
         float gyr = dot(sin(movingPoint*.7), cos(movingPoint.zxy));
-          movingPoint.z += time*.5;
-          float gyr2 = dot(sin(movingPoint*.5), cos(movingPoint.zxy*.9));
-          float text = getFractalValue((point.xy)*.5, 1.1 + point.z*.02);
+        movingPoint.z += uTime * .5;
+        float gyr2 = dot(sin(movingPoint*.5), cos(movingPoint.zxy*.9));
+        float text = getFractalValue((point.xy)*.5, 1.1 + point.z*.02);
 
-          return max(gyr, gyr2) + text*.9;
+        return max(gyr, gyr2) + text*.9;
       }
 
-      vec3 GetNormal(vec3 point, float time) {
-        float distance = GetDistance(point, time);
+      vec3 GetNormal(vec3 point) {
+        float distance = GetDistance(point);
         vec2 e = vec2(.01,0);
 
         vec3 normal = distance - vec3(
-            GetDistance(point-e.xyy, time),
-            GetDistance(point-e.yxy, time),
-            GetDistance(point-e.yyx, time));
+            GetDistance(point-e.xyy),
+            GetDistance(point-e.yxy),
+            GetDistance(point-e.yyx));
 
         return normalize(normal);
       }
 
-      float RayMarch(vec3 rayOrgin, vec3 rayDirection, float time) {
+      float RayMarch(vec3 rayOrgin, vec3 rayDirection) {
         float distance=0.;
           for(int i=0; i<140; i++) {
             vec3 point = rayOrgin + rayDirection * distance;
-              float surfaceDistance = GetDistance(point, time);
+              float surfaceDistance = GetDistance(point);
               distance += surfaceDistance;
               // Stop marching if we go too far or we are close enough of surface
-              if(distance>20. || surfaceDistance<.001) break;
+              if (distance > 20. || surfaceDistance < .001) break;
           }
           return distance;
       }
 
-      float GetLight(vec3 point, vec3 normal, vec3 lightPos, float time) {
+      float GetLight(vec3 point, vec3 normal, vec3 lightPos) {
 
         vec3 direction = normalize(lightPos-point);
 
         float dif = clamp(dot(normal, direction), 0., 1.);
 
-        float d = RayMarch(point+normal*.1, direction, time);
+        float d = RayMarch(point+normal*.1, direction);
         if ( d < length(lightPos-point)) dif *= .5;
 
         return dif;
       }
 
-      vec4 doFractalGyroid(vec2 uv, float time) {
-          vec3 ro = vec3(0, 1.5, 0);
+      vec4 doFractalGyroid(vec2 uv) {
+        vec3 ro = vec3(0, 1.5, 0);
 
-          vec3 rd = normalize(vec3(uv.x, uv.y, 1));
+        vec3 rd = normalize(vec3(uv.x, uv.y, 1));
 
-          float d = RayMarch(ro, rd, time);
+        float d = RayMarch(ro, rd);
 
-          vec3 col = vec3(uColor.rgb + uKickCounter);
+        vec3 col = vec3(uColor.rgb + uKickCounter);
 
-          vec3 lightPos = vec3(0, 0, 17);
+        //vec3 lightPos = vec3(0, 0, 17);
 
-          if (d < 20.) {
-              vec3 p = ro + rd * d;
-              vec3 n = GetNormal(p, time);
-              float light = GetLight(p, n, lightPos, time);
-              // color
-              col = vec3(light);
-          }
-          //col.b += d*.01;
-          col *= uColor.rgb * 2.0;
-          //col *= 1.2;
-          col += 0.075;
+        if (d < 20.) {
+            vec3 p = ro + rd * d;
+            vec3 n = GetNormal(p);
+            float light = GetLight(p, n, lightPos);
+            // color
+            col = vec3(light);
+        }
+        //col.b += d*.01;
+        col *= uColor.rgb * 2.0;
+        //col *= 1.2;
+        col += 0.075;
 
 
-          return vec4(col, 1.);
+        return vec4(col, 1.);
       }
 
-        void main() {
-          vec2 r = vec2(uWidth, uHeight);
-          vec2 uv = (gl_FragCoord.xy-.5*r.xy)/r.y;
+      void main() {
+        vec2 r = vec2(uWidth, uHeight);
+        vec2 uv = (gl_FragCoord.xy-.5*r.xy)/r.y;
 
-          gl_FragColor = doFractalGyroid(uv, uTime) + uFlicker + uKickCounter;
-        }
+        gl_FragColor = doFractalGyroid(uv) + uFlicker + uKickCounter;
+      }
     </script>
 
     <link rel="stylesheet" href="demo.css" />
@@ -607,13 +687,52 @@
         <image id="cyborg-svg" src="./img/wakeup.svg" />
       </section>
     </div>
+    <div class="slide intro-slide">
+      <section id="intro-0" class="hidden">1998</section>
+    </div>
+    <div class="slide intro-slide">
+      <section id="intro-1" class="hidden">our first visit to Assembly</section>
+    </div>
+    <div class="slide intro-slide">
+      <section id="intro-2" class="hidden">every year we said</section>
+    </div>
+    <div class="slide intro-slide">
+      <section id="intro-3" class="hidden">
+        next year we will make a demo
+      </section>
+    </div>
+    <div class="slide intro-slide">
+      <section id="intro-4" class="hidden">25 years later...</section>
+    </div>
+    <div class="slide intro-slide">
+      <section id="intro-5" class="hidden">we finally made one!</section>
+    </div>
+
+    <div class="slide" id="credits-slide">
+      <section id="credits" class="hidden">
+        <h1>WAKE UP / RISE UP</h1>
+        <h3>music / direction / gfx / code / css / svg / font</h3>
+        <h2>outron</h2>
+        <h3>shaders / build scripts</h3>
+        <h2>seven_dc</h2>
+        <br />
+        <div>thanks for watching our first demo!</div>
+      </section>
+    </div>
+
     <section id="vignette">
       <img
         src="img/vignette.png"
         style="width: 100%; height: 100%; mix-blend-mode: multiply"
       />
     </section>
-    <section id="info" onclick="play()">CLICK TO START</section>
+
+    <section id="info" onclick="play()">
+      <div>CLICK TO START</div>
+      <div style="font-size: 0.5em">
+        (beware: flashing lights and nostalgia ahead)
+      </div>
+    </section>
 
     <section id="debug">
       <div>now: <span id="debug-time"></span></div>
@@ -626,8 +745,11 @@
       <div>
         <label for="text-input">Text: </label>
         <input id="text-input" type="text" />
-        <input id="text-duration-input" type="number" value="10" />
-        <input id="text-delay-input" type="number" value="-1" />
+        duration:
+        <input id="text-duration-input" type="number" value="10" /> delay:
+        <input id="text-delay-input" type="number" value="-1" /> spacing:
+        <input id="text-spacing-input" type="number" value="1.3229" />
+        style:
         <select id="text-style-input">
           <option value="METAL">METAL</option>
           <option value="SUNSET">SUNSET</option>
@@ -660,12 +782,21 @@
           <option value="title">Demo title</option>
           <option value="cyborg">Cyborg</option>
           <option value="vignette">Vignette</option>
+          <option value="credits">Credits</option>
+          <option value="intro-0">Intro text 0</option>
+          <option value="intro-1">Intro text 1</option>
+          <option value="intro-2">Intro text 2</option>
+          <option value="intro-3">Intro text 3</option>
+          <option value="intro-4">Intro text 4</option>
+          <option value="intro-5">Intro text 5</option>
         </select>
         <label for="display-element-class-input">new class: </label>
         <select id="display-element-class-input">
           <option value="reset">reset</option>
           <option value="fade-in">fade in</option>
           <option value="fade-out">fade out</option>
+          <option value="fade-in-fast">fast fade in</option>
+          <option value="fade-out-fast">fast fade out</option>
           <option value="blur-in">blur in</option>
           <option value="blur-out">blur out</option>
           <option value="blur">blur</option>
@@ -799,7 +930,7 @@
       </form>
     </dialog>
 
-    <audio id="music" controls src="./audio/OUTRON_49_02.mp3"></audio>
+    <audio id="music" controls src="./audio/WAKE UP RISE UP 03.mp3"></audio>
   </body>
   <script>
     const inputElements = document.getElementsByTagName("input");
@@ -819,6 +950,20 @@
     }
 
     let demoPlaying = false;
+
+    for (let i = 0; i < 6; i++) {
+      const text = document.getElementById(`intro-${i}`).textContent;
+      document.getElementById(`intro-${i}`).innerHTML = textToSVG({
+        text: text.toUpperCase().trim(),
+        charStyle: "",
+        bloom: false,
+        letterSpacing: 2,
+        shadowFill: "#f00",
+        strokeWidth: 0.5,
+        fill: "#fa0",
+        stroke: "#fa0",
+      });
+    }
 
     /*
     document.getElementById("slogan").innerHTML = textToSVG({
@@ -1091,6 +1236,7 @@
       const delay = parseInt(document.getElementById("text-delay-input").value);
       const style = document.getElementById("text-style-input").value;
       const slide = document.getElementById("text-slide-input").value;
+      const letterSpacing = document.getElementById("text-spacing-input").value;
       const animation = document.getElementById("text-animation-input").value;
 
       eventToBeAdded = {
@@ -1100,6 +1246,7 @@
           style,
           slide,
           delay: !isNaN(delay) && delay !== -1 ? delay : undefined,
+          letterSpacing,
           duration,
           animation,
         },

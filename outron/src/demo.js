@@ -433,6 +433,7 @@ function main({ musicEnabled, clearEffects, showTextures, showEvents }) {
                 delay: event.params.delay,
                 animation: event.params.animation,
                 slide: event.params.slide,
+                letterSpacing: event.params.letterSpacing,
                 fill:
                   event.params.style && TEXT_STYLES[event.params.style].fill,
                 stroke:

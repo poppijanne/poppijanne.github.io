@@ -23,7 +23,15 @@ class Fractal3Effect {
       vertexShaderId: "flat-vertex-shader",
       fragmentShaderId: "fractal-3-fragment-shader",
       attributes: ["vertexPosition"],
-      uniforms: ["width", "height", "time", "kickCounter", "color", "flicker"],
+      uniforms: [
+        "width",
+        "height",
+        "time",
+        "kickCounter",
+        "color",
+        "flicker",
+        "rotator",
+      ],
     });
 
     this.programInfo.addBuffersFromGeometry("display", geometry.screen);
@@ -104,6 +112,13 @@ class Fractal3Effect {
       this.bgColor[2],
       1.0,
     ]);
+
+    const rotator = [];
+
+    gl.uniform1f(
+      this.programInfo.uniforms.rotator,
+      1.1 + Math.sin(timePlusKick * 0.1) * 0.4 + this.kickCounter * 0.25 * 0.3
+    );
 
     drawGeometry(gl, this.programInfo.buffers.display, this.programInfo);
   }
