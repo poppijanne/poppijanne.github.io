@@ -8,7 +8,7 @@ const timelineEvents = [
     start: 0,
     params: { id: "webgl-canvas", className: "blur-in" },
   },
-  { id: "effect-1", type: 10, start: 0, params: { id: 0 } },
+  { id: "effect-1", type: 10, start: 0, params: { id: 3 } },
   {
     id: "display-2",
     type: 7,
@@ -201,7 +201,7 @@ const timelineEvents = [
     type: 9,
     start: 21401,
     params: {
-      text: "code and shaders:",
+      text: "code / shaders:",
       style: "SOLID_RED",
       slide: "text",
       letterSpacing: "10",
@@ -349,7 +349,7 @@ const timelineEvents = [
     type: 9,
     start: 35204,
     params: {
-      text: "music and code:",
+      text: "music / code:",
       style: "SOLID_RED",
       slide: "text",
       letterSpacing: "10",
@@ -1324,7 +1324,7 @@ const timelineEvents = [
     type: 9,
     start: 122290,
     params: {
-      text: "coverage: 1%!",
+      text: "coverage: 0.0%",
       style: "SOLID_RED",
       slide: "text-3",
       letterSpacing: "5",

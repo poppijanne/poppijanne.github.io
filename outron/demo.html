@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>OUTRON - DEMO</title>
+    <title>WAKE UP / RISE UP</title>
     <script src="./src/matrix.js"></script>
     <script src="./src/timeline.js"></script>
     <script src="./src/events3.js"></script>
@@ -50,7 +50,7 @@
       uniform float uFlicker;
 
       void main() {
-        gl_FragColor = texture2D(uSampler, vTextureCoord) + uFlicker;
+        gl_FragColor = texture2D(uSampler, vTextureCoord) + uFlicker + 0.02;
       }
     </script>
 
@@ -66,164 +66,127 @@
     </script>
 
     <script id="metaball-fragment-shader" type="x-shader/x-fragment">
-                          precision mediump float;
-                          uniform float uWidth, uHeight, uTime, uKickCounter, uHitCounter, uFlicker, uX;
-                          uniform vec3 uLightPosition, uRayOrigin;
-                          uniform vec4 uColor;
-                          uniform float uNoise[24];
+        precision mediump float;
+        uniform float uWidth, uHeight, uTime, uKickCounter, uHitCounter, uFlicker, uX;
+        uniform vec3 uLightPosition, uRayOrigin;
+        uniform vec4 uColor;
+        uniform float uNoise[24];
 
-                          float smin( float a, float b, float k ) {
-                            float h = clamp( 0.5+0.5*(b-a)/k, 0., 1. );
-                            return mix( b, a, h ) - k*h*(1.0-h);
-                          }
+        float smin( float a, float b, float k ) {
+          float h = clamp( 0.5+0.5*(b-a)/k, 0., 1. );
+          return mix( b, a, h ) - k*h*(1.0-h);
+        }
 
-                          float getMetaBallsRayMarchGetDistance(vec3 point) {
-                            float d = 50.;
-
-
-                            for (int i=0; i < 6; i++) {
-                              vec4 ball = vec4(0.,1., 5., .6 + uNoise[i+12] + uHitCounter + uKickCounter);
-                              //float fi = float(i); // because % is not supported
-
-                              if (i == 0) {
-                                ball.x += uNoise[i]*2. + sin(uNoise[i] + uTime*.5);
-                                ball.y += uNoise[i]*2. + cos(uNoise[i] + uTime*.3);
-                                ball.z += uNoise[i] + sin(uNoise[i] + uTime*.7);
-                              }
-                              else if (i == 1) {
-                                  ball.x += uNoise[i+12] + sin(uNoise[i] + uTime);
-                                  ball.y += uNoise[i] + cos(uNoise[i] + uTime);
-                                  ball.z += uNoise[i] + cos(uNoise[i] + uTime)*3.;
-                              }
-                              else if (i == 2) {
-                                  ball.x += uNoise[i] - cos(uNoise[i+12] + uTime*2.) *3.;
-                                  ball.yz += uNoise[i+12] + sin(uNoise[i+12] + uTime*2.) *3.;
-                              }
-                              else if (i == 3) {
-                                  ball.xyz += uNoise[i] + sin(uNoise[i+12] + uTime*3.) *2.;
-                              }
-                              else if (i == 4) {
-                                  ball.x += uNoise[i] + cos(uNoise[i+12] + uTime*4.) *2.;
-                                  ball.yz += uNoise[i] - cos(uNoise[i+12] + uTime*4.) *2.;
-                              }
-                              else if (i == 5) {
-                                  ball.xy += uNoise[i+12] + sin(uNoise[i+12] + uTime*3.);
-                                  ball.z += uNoise[i] - cos(uNoise[i+12] + uTime*2.) * 2.;
-                              }
-                              else if (i == 6) {
-                                ball.y += uNoise[i] + cos(uNoise[i+12] + uTime*1.5) * 3.;
-                                ball.xz += uNoise[i] - sin(uNoise[i+12] + uTime*2.) * 2.;
-                              }
-                              else if (i == 7) {
-                                ball.xy += uNoise[i] + cos(uNoise[i] + uTime*2.5) * 3.;
-                                ball.z += uNoise[i] - sin(uNoise[i] + uTime*3.5) * 2.;
-                              }
+        float getMetaBallsRayMarchGetDistance(vec3 point) {
+          float d = 50.;
 
 
+          for (int i=0; i < 6; i++) {
+            vec4 ball = vec4(0.,1., 5., .6 + uNoise[i+12] + uHitCounter + uKickCounter);
+            //float fi = float(i); // because % is not supported
 
-                              float bf = length(point-ball.xyz)-ball.w;
-                              d = smin(bf, d, .6);
-
-                            }
-
-      /*
-
-                            for (int i=0; i < 7; i++) {
-                                vec4 ball = vec4(0.,1., 5., .6 + uNoise[i+12] + uHitCounter + uKickCounter);
-                                float fi = float(i); // because % is not supported
-
-                                if (mod(fi,2.) == 0.) {
-                                  ball.x += uNoise[i]*2. + sin(uNoise[i] + uTime*.5);
-                                  ball.y += uNoise[i]*2. + cos(uNoise[i] + uTime*.3);
-                                  ball.z += uNoise[i] + sin(uNoise[i] + uTime*.7);
-                                }
-                                if (mod(fi,3.) == 1.) {
-                                    ball.x += uNoise[i+12] + sin(uNoise[i] + uTime);
-                                    ball.y += uNoise[i] + cos(uNoise[i] + uTime);
-                                    ball.z += uNoise[i] + cos(uNoise[i] + uTime)*3.;
-                                }
-                                if (mod(fi,4.) == 2.) {
-                                    ball.x += uNoise[i] - cos(uNoise[i+12] + uTime*2.) *3.;
-                                    ball.yz += uNoise[i+12] + sin(uNoise[i+12] + uTime*2.) *3.;
-                                }
-                                if (mod(fi,5.) == 3.) {
-                                    ball.xyz += uNoise[i] + sin(uNoise[i+12] + uTime*3.) *2.;
-                                }
-                                if (mod(fi,6.) == 4.) {
-                                    ball.x += uNoise[i] + cos(uNoise[i+12] + uTime*4.) *2.;
-                                    ball.yz += uNoise[i] - cos(uNoise[i+12] + uTime*4.) *2.;
-                                }
-
-
-                                float bf = length(point-ball.xyz)-ball.w;
-                                d = smin(bf, d, .6);
-
-                            }
-      */
+            if (i == 0) {
+              ball.x += uNoise[i]*2. + sin(uNoise[i] + uTime*.5);
+              ball.y += uNoise[i]*2. + cos(uNoise[i] + uTime*.3);
+              ball.z += uNoise[i] + sin(uNoise[i] + uTime*.7);
+            }
+            else if (i == 1) {
+                ball.x += uNoise[i+12] + sin(uNoise[i] + uTime);
+                ball.y += uNoise[i] + cos(uNoise[i] + uTime);
+                ball.z += uNoise[i] + cos(uNoise[i] + uTime)*3.;
+            }
+            else if (i == 2) {
+                ball.x += uNoise[i] - cos(uNoise[i+12] + uTime*2.) *3.;
+                ball.yz += uNoise[i+12] + sin(uNoise[i+12] + uTime*2.) *3.;
+            }
+            else if (i == 3) {
+                ball.xyz += uNoise[i] + sin(uNoise[i+12] + uTime*3.) *2.;
+            }
+            else if (i == 4) {
+                ball.x += uNoise[i] + cos(uNoise[i+12] + uTime*4.) *2.;
+                ball.yz += uNoise[i] - cos(uNoise[i+12] + uTime*4.) *2.;
+            }
+            else if (i == 5) {
+                ball.xy += uNoise[i+12] + sin(uNoise[i+12] + uTime*3.);
+                ball.z += uNoise[i] - cos(uNoise[i+12] + uTime*2.) * 2.;
+            }
+            else if (i == 6) {
+              ball.y += uNoise[i] + cos(uNoise[i+12] + uTime*1.5) * 3.;
+              ball.xz += uNoise[i] - sin(uNoise[i+12] + uTime*2.) * 2.;
+            }
+            else if (i == 7) {
+              ball.xy += uNoise[i] + cos(uNoise[i] + uTime*2.5) * 3.;
+              ball.z += uNoise[i] - sin(uNoise[i] + uTime*3.5) * 2.;
+            }
 
 
-                            return d;
-                        }
 
-                        vec3 getMetaBallsRayMarchGetNormal(vec3 point) {
-                          float distance = getMetaBallsRayMarchGetDistance(point);
-                          vec2 e = vec2(.01,0);
-                          return normalize(distance - vec3(
-                              getMetaBallsRayMarchGetDistance(point-e.xyy),
-                              getMetaBallsRayMarchGetDistance(point-e.yxy),
-                              getMetaBallsRayMarchGetDistance(point-e.yyx)));
-                        }
+            float bf = length(point-ball.xyz)-ball.w;
+            d = smin(bf, d, .6);
+          }
 
-                        vec2 getMetaBallsRayMarch(vec3 rayOrgin, vec3 rayDirection) {
-                          float distance=0.;
-                          for(int i=0; i<100; i++) {
-                            vec3 point = rayOrgin + rayDirection * distance;
-                            float surfaceDistance = getMetaBallsRayMarchGetDistance(point);
-                            distance += surfaceDistance;
-                            if (distance>27. || surfaceDistance<.01) break;
-                          }
-                          return vec2(distance,0);
-                        }
+          return d;
+      }
 
-                        float getMetaBallsGetLight(vec3 point, vec3 normal) {
-                          vec3 direction = normalize(uLightPosition-point);
-                          float dif = clamp(dot(normal, direction), 0., 1.);
-                          vec2 d = getMetaBallsRayMarch(point+normal*.1, direction);
-                          if ( d.x < length(uLightPosition-point)) {
-                              dif *= 0.5;
-                          } else {
-                              dif -= d.y*.006;
-                          }
-                          return dif;
-                        }
+      vec3 getMetaBallsRayMarchGetNormal(vec3 point) {
+        float distance = getMetaBallsRayMarchGetDistance(point);
+        vec2 e = vec2(.01,0);
+        return normalize(distance - vec3(
+            getMetaBallsRayMarchGetDistance(point-e.xyy),
+            getMetaBallsRayMarchGetDistance(point-e.yxy),
+            getMetaBallsRayMarchGetDistance(point-e.yyx)));
+      }
 
-                        vec4 getMetaBalls(vec2 uv) {
+      vec2 getMetaBallsRayMarch(vec3 rayOrgin, vec3 rayDirection) {
+        float distance=0.;
+        for(int i=0; i<100; i++) {
+          vec3 point = rayOrgin + rayDirection * distance;
+          float surfaceDistance = getMetaBallsRayMarchGetDistance(point);
+          distance += surfaceDistance;
+          if (distance>27. || surfaceDistance<.01) break;
+        }
+        return vec2(distance,0);
+      }
 
-                            vec4 col = vec4(0.);
-                            //vec3 rayOrgin = vec3(0., 1., -1.);
-                            //rayOrgin.xz *= rotate(uTime);
+      float getMetaBallsGetLight(vec3 point, vec3 normal) {
+        vec3 direction = normalize(uLightPosition-point);
+        float dif = clamp(dot(normal, direction), 0., 1.);
+        vec2 d = getMetaBallsRayMarch(point+normal*.1, direction);
+        if ( d.x < length(uLightPosition-point)) {
+            dif *= 0.5;
+        } else {
+            dif -= d.y*.006;
+        }
+        return dif;
+      }
 
-                            vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1));
-                            vec2 d = getMetaBallsRayMarch(uRayOrigin, rayDirection);
+      vec4 getMetaBalls(vec2 uv) {
 
-                            if (d.x < 17.) {
-                                vec3 p = uRayOrigin + rayDirection * d.x;
-                                vec3 n = getMetaBallsRayMarchGetNormal(p);
-                                float light = getMetaBallsGetLight(p, n) + .1;
-                                col = vec4(light*uColor.r,uColor.g*light,uColor.b*light, 1.);
-                                col.rgb += uColor.rgb * (1.0+n.z) * (0.2 + uFlicker);
-                                col.rgb += uKickCounter;
-                                col *= col + col + col;
-                            }
+          vec4 col = vec4(0.);
+          //vec3 rayOrgin = vec3(0., 1., -1.);
+          //rayOrgin.xz *= rotate(uTime);
 
-                            return col;
-                        }
+          vec3 rayDirection = normalize(vec3(uv.x, uv.y, 1));
+          vec2 d = getMetaBallsRayMarch(uRayOrigin, rayDirection);
 
-                        void main() {
-                          vec2 r = vec2(uWidth,uHeight);
-                          vec2 uv = (gl_FragCoord.xy-.5*r.xy)/r.y;
-                          gl_FragColor = getMetaBalls(uv);
-                        }
+          if (d.x < 17.) {
+              vec3 p = uRayOrigin + rayDirection * d.x;
+              vec3 n = getMetaBallsRayMarchGetNormal(p);
+              float light = getMetaBallsGetLight(p, n) + .1;
+              col = vec4(light*uColor.r,uColor.g*light,uColor.b*light, 1.);
+              col.rgb += uColor.rgb * (1.0+n.z) * (0.2 + uFlicker);
+              col.rgb += uKickCounter;
+              col *= col + col + col;
+          }
+
+          return col;
+      }
+
+      void main() {
+        vec2 r = vec2(uWidth,uHeight);
+        vec2 uv = (gl_FragCoord.xy-.5*r.xy)/r.y;
+        gl_FragColor = getMetaBalls(uv);
+      }
     </script>
 
     <!-- META CUBES SHADERS -->
@@ -251,30 +214,7 @@
 
           for (int i=0; i < 7; i++) {
               vec4 ball = vec4(0.,1., 5., .6 + uNoise[i+12]*.5 + uHitCounter + uKickCounter);
-              //float fi = float(i); // because % is not supported
 
-              /*
-              if (mod(fi,2.) == 0.) {
-                ball.x += uNoise[i]*1.7 + sin(uNoise[i] + uTime*.6);
-                ball.y += uNoise[i+5]*2.2 + cos(uNoise[i] + uTime*.4);
-                ball.z += uNoise[i+2]*.9 + sin(uNoise[i+4] + uTime*.8);
-              } else {
-                ball.x += uNoise[i+12] + sin(uNoise[i] + uTime);
-                ball.y += uNoise[i] + cos(uNoise[i] + uTime);
-                ball.z += uNoise[i] + cos(uNoise[i] + uTime)*3.5;
-              }
-              if (mod(fi,3.) == 2.) {
-                  ball.x += uNoise[i] - cos(uNoise[i+12] + uTime*2.) *3.2;
-                  ball.yz += uNoise[i+12] + sin(uNoise[i+12] + uTime*2.) *3.2;
-              }
-              if (mod(fi,4.) == 3.) {
-                  ball.xyz += uNoise[i] + sin(uNoise[i+12] + uTime*3.) *2.;
-              }
-              if (mod(fi,5.) == 4.) {
-                  ball.x += uNoise[i] + cos(uNoise[i+12] + uTime*4.) *2.;
-                  ball.yz += uNoise[i] - cos(uNoise[i+12] + uTime*4.) *2.;
-              }
-              */
               if (i == 0) {
                 ball.x += uNoise[i]*1.7 + sin(uNoise[i] + uTime*.6);
                 ball.y += uNoise[i+5]*2.2 + cos(uNoise[i] + uTime*.4);
@@ -301,7 +241,6 @@
                 ball.yz += uNoise[i] - cos(uNoise[i+12] + uTime*4.) *2.;
               }
 
-              //float bf = length(point-ball.xyz)-ball.w;
               vec3 spoint = point-ball.xyz;
               spoint.xy *= Rotate(ball.x + uNoise[i]);
               spoint.xz *= Rotate(ball.y);
@@ -736,10 +675,7 @@
     </div>
 
     <section id="vignette">
-      <img
-        src="img/vignette.png"
-        style="width: 100%; height: 100%; mix-blend-mode: multiply"
-      />
+      <img src="img/vignette.png" style="width: 100%; height: 100%" />
     </section>
 
     <section id="info" onclick="play()">
@@ -945,7 +881,7 @@
       </form>
     </dialog>
 
-    <audio id="music" controls src="./audio/WAKE UP RISE UP 03.mp3"></audio>
+    <audio id="music" controls src="./audio/WAKE_UP_RISE_UP_04.mp3"></audio>
   </body>
   <script>
     const inputElements = document.getElementsByTagName("input");
