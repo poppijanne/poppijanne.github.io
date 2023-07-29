@@ -304,6 +304,7 @@ function main({ musicEnabled, clearEffects, showTextures, showEvents }) {
   const deltaOutputElement = document.getElementById("debug-delta");
   const audio = document.getElementById("music");
   const bodyElement = document.querySelector("body");
+  const vignetteElement = document.getElementById("vignette");
   document.getElementById(
     "debug-events-show-only-current-events-checkbox"
   ).onclick = (event) => {
@@ -311,6 +312,7 @@ function main({ musicEnabled, clearEffects, showTextures, showEvents }) {
   };
 
   bodyElement.style.height = window.innerHeight + "px";
+  bodyElement.style.width = window.innerWidth + "px";
 
   let past = 0;
   let currentTextId = "";

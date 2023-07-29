@@ -214,12 +214,33 @@ const FONT1 = {
   "!": new SVGPath(
     `m0 0v7.9375h2.6458v-7.9375h-2.6458zm0 10.583v2.6458h2.6458v-2.6458h-2.6458z`
   ),
+  "%": new SVGPath(
+    `m11.024 0-11.024 11.024 2.205 2.205 11.024-11.024-2.205-2.205zm-7.6032 1.5498-1.8712 1.8712 1.8712 1.8707 1.8707-1.8707-1.8707-1.8712zm6.6146 6.6146-1.8712 1.8712 1.8712 1.8707 1.8707-1.8707-1.8707-1.8712z`
+  ),
+  _: new SVGPath(`m2.7333e-6 10.583h13.229v2.6458h-13.229z`),
+  '"': new SVGPath(
+    `m0 0v5.2917h2.6458v-5.2917zm5.2917 0v5.2917h2.6458v-5.2917z`
+  ),
+  _: new SVGPath(`m2.7333e-6 10.583h13.229v2.6458h-13.229z`),
+  "@": new SVGPath(
+    `m2.6458 0-2.6458 2.6458v2.6458l6.6146 7.9375 6.6146-7.9375v-2.6458l-2.6458-2.6458h-1.3229l-2.6458 2.6458-2.6458-2.6458z`
+  ),
+  "^": new SVGPath(
+    `m0 6.6146h2.6458v3.9688h7.9375v-3.9688h2.6458l-6.6146-6.6146-5.2917 5.2917zm2.6458 6.6146h7.9375v-1.3229h-7.9375z`
+  ),
+  ":": new SVGPath(
+    `m0 2.6458v2.6458h2.6458v-2.6458h-2.6458zm0 5.2917v2.6458h2.6458v-2.6458h-2.6458z`
+  ),
   getCharacterWidth(c) {
     switch (c) {
       case "I":
         return Math.round(2.6458 * FONT_RESIZE_FACTOR);
       case ".":
         return Math.round(2.6458 * FONT_RESIZE_FACTOR);
+      case ":":
+        return Math.round(2.6458 * FONT_RESIZE_FACTOR);
+      case '"':
+        return Math.round(2.6458 * 3 * FONT_RESIZE_FACTOR);
       case "!":
         return Math.round(2.6458 * FONT_RESIZE_FACTOR);
       case "1":

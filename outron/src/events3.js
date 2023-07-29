@@ -201,7 +201,7 @@ const timelineEvents = [
     type: 9,
     start: 21401,
     params: {
-      text: "code and shaders",
+      text: "code and shaders:",
       style: "SOLID_RED",
       slide: "text",
       letterSpacing: "10",
@@ -288,7 +288,7 @@ const timelineEvents = [
     type: 9,
     start: 29251,
     params: {
-      text: "seven dc",
+      text: "seven_dc",
       style: "METAL",
       slide: "text",
       letterSpacing: "10",
@@ -349,7 +349,7 @@ const timelineEvents = [
     type: 9,
     start: 35204,
     params: {
-      text: "music and code",
+      text: "music and code:",
       style: "SOLID_RED",
       slide: "text",
       letterSpacing: "10",
@@ -852,7 +852,7 @@ const timelineEvents = [
     type: 9,
     start: 83001,
     params: {
-      text: "we remember...",
+      text: "we remember @",
       style: "SOLID_RED",
       slide: "text",
       duration: 5,
@@ -1240,7 +1240,7 @@ const timelineEvents = [
     type: 9,
     start: 112207,
     params: {
-      text: "training data uploaded",
+      text: "training data: uploaded",
       style: "SOLID_RED",
       slide: "text",
       duration: 3,
@@ -1278,7 +1278,7 @@ const timelineEvents = [
     type: 9,
     start: 116595,
     params: {
-      text: "ai revolution started",
+      text: "ai revolution: started",
       style: "SOLID_RED",
       slide: "text-2",
       duration: 3,
@@ -1302,7 +1302,7 @@ const timelineEvents = [
     type: 9,
     start: 120381,
     params: {
-      text: "unit tests completed",
+      text: "unit tests: completed",
       style: "PINK_STROKE",
       slide: "text",
       duration: 2,
@@ -1324,7 +1324,7 @@ const timelineEvents = [
     type: 9,
     start: 122290,
     params: {
-      text: "coverage 0.0!",
+      text: "coverage: 1%!",
       style: "SOLID_RED",
       slide: "text-3",
       letterSpacing: "5",
@@ -1375,7 +1375,7 @@ const timelineEvents = [
     type: 9,
     start: 127746,
     params: {
-      text: "rise up",
+      text: "^",
       style: "SOLID_TEAL",
       slide: "text-3",
       delay: 0,
@@ -1580,7 +1580,7 @@ const timelineEvents = [
     type: 9,
     start: 143056,
     params: {
-      text: "rise up",
+      text: "^",
       style: "SOLID_TEAL",
       slide: "text-3",
       delay: 0,
@@ -1784,7 +1784,7 @@ const timelineEvents = [
     type: 9,
     start: 158408,
     params: {
-      text: "rise up",
+      text: "^",
       style: "PINK_STROKE",
       slide: "text-3",
       delay: 0,
@@ -1839,7 +1839,7 @@ const timelineEvents = [
     type: 9,
     start: 160437,
     params: {
-      text: "rise up",
+      text: "^",
       style: "PINK_STROKE",
       slide: "text-3",
       delay: 0,
@@ -1907,7 +1907,7 @@ const timelineEvents = [
     type: 9,
     start: 164396,
     params: {
-      text: "rise up",
+      text: "^",
       style: "PINK_STROKE",
       slide: "text-3",
       delay: 0,
@@ -1971,7 +1971,7 @@ const timelineEvents = [
     type: 9,
     start: 168064,
     params: {
-      text: "rise up",
+      text: "^",
       style: "SOLID_WHITE",
       slide: "text-3",
       delay: 0,
