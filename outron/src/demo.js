@@ -422,8 +422,10 @@ function main({ musicEnabled, clearEffects, showTextures, showEvents }) {
             }
             break;
           case EVENT_TYPES.DISPLAY:
-            document.getElementById(event.params.id).className =
-              event.params.className;
+            const element = document.getElementById(event.params.id);
+            if (element) {
+              element.className = event.params.className;
+            }
             break;
           case EVENT_TYPES.TEXT:
             if (currentTextId !== event.id) {
