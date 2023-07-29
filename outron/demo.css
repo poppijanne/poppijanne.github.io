@@ -150,35 +150,10 @@ fieldset {
 h3 {
   color: rgb(204, 148, 7);
 }
-/*
-#intro-0 {
-  width: 50%;
-}
 
-#intro-1 {
-  width: 50%;
-}
-
-#intro-2 {
-  width: 50%;
-}
-
-#intro-3 {
-  width: 50%;
-}
-
-#intro-4 {
-  width: 50%;
-}
-
-#intro-5 {
-  width: 50%;
-}
-*/
 .intro-slide {
-  /*mix-blend-mode: color-dodge;*/
   transform: skew(-15deg);
-  width: 60%;
+  width: 70%;
 }
 
 .info-item {
