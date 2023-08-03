@@ -671,6 +671,8 @@
       </section>
     </div>
 
+    <section id="fader"></section>
+
     <section id="vignette">
       <img src="img/vignette.jpg" style="width: 100%; height: 100%" />
     </section>
@@ -730,6 +732,7 @@
           <option value="title">Demo title</option>
           <option value="cyborg">Cyborg</option>
           <option value="vignette">Vignette</option>
+          <option value="fader">Fader</option>
           <option value="credits">Credits</option>
           <option value="intro-0">Intro text 0</option>
           <option value="intro-1">Intro text 1</option>
@@ -956,7 +959,7 @@
               demoPlaying = true;
               document.getElementById("info").style.display = "none";
               if (!showCursor) {
-                document.getElementById("vignette").style.cursor = "none";
+                document.getElementById("fader").style.cursor = "none";
               }
               //document.getElementById("outron").style.opacity = 0.0;
               main({
