@@ -120,6 +120,9 @@ fieldset {
 }
 
 #fader {
+  position: absolute;
+  left: 0;
+  top: 0;
   z-index: 4;
   width: 100vw;
   height: 100vh;
