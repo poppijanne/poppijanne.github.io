@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>OUTRON - DEMO</title>
+    <style>
+      body {
+        width: 100vw;
+        height: 100vh;
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        background-color: rgb(0, 0, 0);
+      }
+
+      .bg-color-shifter {
+        animation: 20s ease-in-out infinite bg-color-shift;
+      }
+
+      #info {
+        position: absolute;
+        left: 0;
+        height: 0;
+        z-index: 4;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .info-item {
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+        font-size: 1em;
+        color: #fff;
+        padding: 1em;
+        border: 2px solid #0b2a2e;
+        background-color: #041a22;
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        box-shadow: 0px 1px 2px #000000;
+      }
+
+      .info-item div {
+        padding: 0.5em;
+      }
+
+      .info-item label {
+        margin-left: 1ch;
+        color: #f00;
+        text-shadow: 0px 0px 8px #f00;
+      }
+
+      .info-item a {
+        display: inline-block;
+        font-size: 2em;
+        background-color: #01353c;
+        color: #08effa;
+        padding: 0.5em 1em 0.5em 1em;
+        margin-top: 0.5em;
+        border: 1px solid #ffffff36;
+        text-shadow: 0px 0px 8px #ffffff36;
+        cursor: pointer;
+        text-decoration: none;
+        animation: 10s infinite hue-rotation-fast;
+      }
+
+      @keyframes hue-rotation-fast {
+        0% {
+          filter: hue-rotate(0deg);
+        }
+        100% {
+          filter: hue-rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <section id="info">
+      <form>
+        <div class="info-item">
+          <div>
+            <input
+              id="music-disabled"
+              type="checkbox"
+              checked
+              onclick="updateLink()"
+            /><label for="music-disabled">MUSIC</label>
+          </div>
+          <div>
+            <input
+              id="show-audio"
+              type="checkbox"
+              onclick="updateLink()"
+            /><label for="show-audio">AUDIO CONTROLS</label>
+          </div>
+          <div>
+            <input
+              id="clear-effects"
+              type="checkbox"
+              onclick="updateLink()"
+            /><label for="clear-effects">CLEAR EFFECTS</label>
+          </div>
+          <div>
+            <input
+              id="dev-tools"
+              type="checkbox"
+              onclick="updateLink()"
+            /><label for="dev-tools">DEVELOPER TOOLS</label>
+          </div>
+          <div>
+            <input
+              id="show-textures"
+              type="checkbox"
+              onclick="updateLink()"
+            /><label for="show-textures">SHOW TEXTURES</label>
+          </div>
+          <div>
+            <input
+              id="show-events"
+              type="checkbox"
+              onclick="updateLink()"
+            /><label for="show-events">SHOW EVENTS</label>
+          </div>
+          <div>
+            <input
+              id="show-cursor"
+              type="checkbox"
+              onclick="updateLink()"
+            /><label for="show-cursor">SHOW MOUSE CURSOR</label>
+          </div>
+          <div>
+            <a id="start-link" href="demo.html">START</a>
+          </div>
+        </div>
+      </form>
+    </section>
+  </body>
+  <script>
+    function updateLink() {
+      const musicEnabled =
+        document.getElementById("music-disabled").checked === true;
+      const clearEffects =
+        document.getElementById("clear-effects").checked === true;
+      const showAudio = document.getElementById("show-audio").checked === true;
+      const showEvents =
+        document.getElementById("show-events").checked === true;
+      const showDevTools =
+        document.getElementById("dev-tools").checked === true;
+      const showTextures =
+        document.getElementById("show-textures").checked === true;
+      const showCursor =
+        document.getElementById("show-cursor").checked === true;
+      document.getElementById(
+        "start-link"
+      ).href = `demo.html?music=${musicEnabled}&clear-effects=${clearEffects}&show-audio=${showAudio}&dev-tools=${showDevTools}&show-textures=${showTextures}&show-events=${showEvents}&show-cursor=${showCursor}`;
+    }
+    updateLink();
+  </script>
+</html>

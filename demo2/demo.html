@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>DEMO 2</title>
+    <script src="./src/matrix.js"></script>
+    <script src="./src/palette.js"></script>
+    <script src="./src/resource-loader.js"></script>
+    <script src="./src/obj-loader.js"></script>
+    <script src="./src/timeline.js"></script>
+    <script src="./src/events.js"></script>
+    <script src="./src/text.js"></script>
+    <script src="./src/webgl.js"></script>
+    <script src="./src/geometry.js"></script>
+    <script src="./src/canvas.js"></script>
+    <script src="./src/effects.js"></script>
+    <script src="./src/effect-cube.js"></script>
+    <script src="./src/demo.js"></script>
+
+    <!-- CUBE EFFECT SHADERS -->
+
+    <script id="cube-vertex-shader" type="x-shader/x-vertex">
+
+      attribute vec4 aVertexPosition;
+      attribute vec2 aTextureCoord;
+      attribute vec3 aVertexNormal;
+      attribute vec3 aTangent;
+      attribute vec3 aBitangent;
+
+      varying highp vec2 vTextureCoord;
+      varying highp vec3 vVertexNormal;
+      varying highp vec3 vTangentLightDirection;
+      //varying highp vec3 vTangentEyePosition;
+      varying highp vec3 vTangentSurfaceToLight;
+      varying highp vec3 vTangentSurfaceToEye;
+      varying highp vec3 vTangentPosition;
+      varying highp vec3 vTangentEyePosition;
+
+      // needed for x,y,z -> clip space
+      uniform mat4 uWorldViewProjectionMatrix;
+      uniform mat4 uProjectionMatrix;
+      uniform mat4 uViewMatrix;
+      uniform mat4 uModelMatrix;
+      // rotation of the world (around the object)
+      uniform mat4 uWorldMatrix;
+      uniform vec3 uLightDirection;
+      uniform vec3 uEyePosition;
+
+      highp mat3 transpose(in highp mat3 inMatrix) {
+        highp vec3 i0 = inMatrix[0];
+        highp vec3 i1 = inMatrix[1];
+        highp vec3 i2 = inMatrix[2];
+
+        return mat3(
+          vec3(i0.x, i1.x, i2.x),
+          vec3(i0.y, i1.y, i2.y),
+          vec3(i0.z, i1.z, i2.z)
+        );
+      }
+
+      void main() {
+        vec3 t = normalize(mat3(uWorldMatrix) * mat3(uModelMatrix) * aTangent);
+        vec3 b = normalize(mat3(uWorldMatrix) * mat3(uModelMatrix) * aBitangent);
+        vec3 n = normalize(mat3(uWorldMatrix) * mat3(uModelMatrix) * aVertexNormal);
+        mat3 transposedTBN = transpose(mat3(t, b, n));
+        vTangentLightDirection = transposedTBN * uLightDirection;
+        //vTangentLightDirection = transposedTBN * vec3(uWorldMatrix * uViewMatrix * vec4(uLightDirection,1.0));
+        vTangentEyePosition = transposedTBN * uEyePosition;
+        //vTangentEyePosition = transposedTBN * vec3(uProjectionMatrix * vec4(uEyePosition,1.0));
+        vTangentPosition = transposedTBN * vec3(uWorldMatrix * uModelMatrix * aVertexPosition);
+        vTangentSurfaceToLight = vTangentLightDirection - vTangentPosition;
+        vTangentSurfaceToEye = vTangentEyePosition - vTangentPosition;
+        gl_Position = uWorldViewProjectionMatrix * uModelMatrix * aVertexPosition;
+        vTextureCoord = aTextureCoord;
+        //vTangentEyePosition = uEyePosition;
+        //vTangentPosition = vec3(uWorldMatrix * aVertexPosition);
+      }
+    </script>
+
+    <script id="cube-fragment-shader" type="x-shader/x-fragment">
+      precision mediump float;
+
+      varying highp vec2 vTextureCoord;
+      varying highp vec3 vTangentLightDirection;
+      varying highp vec3 vTangentSurfaceToLight;
+      varying highp vec3 vTangentSurfaceToEye;
+      varying highp vec3 vTangentPosition;
+      varying highp vec3 vTangentEyePosition;
+
+      uniform sampler2D uColorSampler;
+      uniform sampler2D uNormalSampler;
+      uniform sampler2D uSpecularSampler;
+      uniform sampler2D uMetalSampler;
+      uniform samplerCube uCubeSampler;
+      uniform float uFlicker;
+      uniform vec4 uDirectionalLightColor;
+      uniform vec4 uAmbientLightColor;
+
+      void main() {
+
+        vec3 surfaceToLightDirection = normalize(vTangentSurfaceToLight);
+        vec3 surfaceToViewDirection = normalize(vTangentSurfaceToEye);
+        vec3 viewToSurfaceDirection = normalize(vTangentSurfaceToEye);
+        vec3 halfVector = normalize(surfaceToLightDirection + surfaceToViewDirection);
+
+        vec4 metal = texture2D(uMetalSampler, vTextureCoord);
+        vec4 color = texture2D(uColorSampler, vTextureCoord);// * uAmbientLightColor;
+        //vec4 color = vec4(0.1,0.1,0.1,1.0);
+        vec3 ambient = color.rgb * uAmbientLightColor.rgb;
+
+
+        //color = vec4(0.1,0.1,0.1,1.0);
+
+
+        vec3 normal = texture2D(uNormalSampler, vTextureCoord).rgb;
+        normal = normal * 2.0 - 1.0;
+        float light = dot(normal, normalize(vTangentLightDirection));
+        //float light = dot(normal, surfaceToLightDirection);
+        vec3 diffuce = uDirectionalLightColor.rgb * color.rgb * max(0.0,light);
+
+
+        vec4 specularColor = texture2D(uSpecularSampler, vTextureCoord);// * 2.0;
+        float s = clamp(dot(normal, halfVector),0.0,1.0);
+        vec3 specular = pow(s, 25.0) * uDirectionalLightColor.rgb * (specularColor.rgb * 5.0);
+
+
+        vec3 eyeToSurfaceDir = normalize(vTangentEyePosition - vTangentPosition);
+        vec3 r = reflect(eyeToSurfaceDir, normal);
+        //vec3 r = reflect(surfaceToViewDirection, normal);
+        //color.rgb += textureCube(uCubeSampler, reflection).rgb * metal.rgb;
+        vec3 reflection = textureCube(uCubeSampler, r).rgb * specularColor.rgb * metal.rgb;
+
+        gl_FragColor = vec4(ambient + diffuce + specular + reflection, color.a);
+      }
+    </script>
+
+    <script id="cube-vertex-shader-old" type="x-shader/x-vertex">
+
+      attribute vec4 aVertexPosition;
+      attribute vec2 aTextureCoord;
+      attribute vec3 aVertexNormal;
+
+      varying highp vec2 vTextureCoord;
+      varying highp vec3 vVertexNormal;
+      //varying highp vec4 vVertexColor;
+
+      //uniform mat4 uModelViewMatrix;
+      //uniform mat4 uProjectionMatrix;
+      uniform mat4 uWorldViewProjectionMatrix;
+      uniform mat4 uWorldMatrix;
+
+      void main() {
+       //vec4 position = vec4(aVertexPosition.xyz,1.0);
+        //gl_Position = uProjectionMatrix * uModelViewMatrix * position;
+        gl_Position = uWorldViewProjectionMatrix * aVertexPosition;
+        vTextureCoord = aTextureCoord;
+        vVertexNormal = mat3(uWorldMatrix) * aVertexNormal;
+        //vVertexColor = dot(normal,uLightDirection) * vec4(1.0,1.0,1.0,1.0);
+      }
+    </script>
+
+    <!-- no normal map -->
+    <script id="cube-no-normalmap-fragment-shader" type="x-shader/x-fragment">
+      precision mediump float;
+
+      varying highp vec2 vTextureCoord;
+      varying highp vec3 vVertexNormal;
+      //varying highp vec4 vVertexColor;
+      uniform sampler2D uColorSampler;
+      uniform sampler2D uSpecularSampler;
+      uniform float uFlicker;
+      uniform vec3 uLightDirection;
+      uniform vec4 uDirectionalLightColor;
+      uniform vec4 uAmbientLightColor;
+
+      void main() {
+
+       //gl_FragColor = texture2D(uSampler, vTextureCoord);// + uFlicker + 0.02;
+
+       //gl_FragColor = uDirectionalLightColor;
+
+        vec3 normal = normalize(vVertexNormal);
+        vec4 color = texture2D(uColorSampler, vTextureCoord) * uAmbientLightColor;
+        //vec4 color = uAmbientLightColor;
+        vec4 specularColor = texture2D(uSpecularSampler, vTextureCoord);
+        normal = normalize(normal * 2.0 - 1.0);
+        float d = dot(normal,uLightDirection);
+        color.rgb += uDirectionalLightColor.rgb * (specularColor.rgb * 0.5) * max(0.0,d);
+        //color.rgb *= normalColor.rgb * 2.0;
+        gl_FragColor = color;
+        //gl_FragColor = texture2D(uSpecularSampler, vTextureCoord);//color;
+
+      }
+    </script>
+
+    <!-- 2D SHADERS -->
+
+    <script id="flat-vertex-shader" type="x-shader/x-vertex">
+
+      attribute vec4 aVertexPosition;
+
+      void main() {
+        gl_Position = aVertexPosition;
+      }
+    </script>
+
+    <link rel="stylesheet" href="demo.css" />
+  </head>
+  <body>
+    <canvas id="webgl-canvas" width="480" height="480"></canvas>
+    <canvas id="webgl-canvas-2" width="480" height="480"></canvas>
+
+    <div class="slide">
+      <section id="outron" class="hidden">
+        <image
+          class="logo-animations"
+          src="./img/outron.svg"
+          style="mix-blend-mode: color-dodge"
+        />
+      </section>
+    </div>
+
+    <div class="slide">
+      <section id="title" class="hidden"></section>
+    </div>
+
+    <div class="slide">
+      <section id="cyborg" class="hidden"></section>
+    </div>
+
+    <div class="slide" style="mix-blend-mode: color-dodge">
+      <section id="text"></section>
+    </div>
+    <div class="slide" style="mix-blend-mode: color-dodge">
+      <section id="text-2"></section>
+    </div>
+    <div class="slide" style="mix-blend-mode: screen">
+      <section id="text-3"></section>
+    </div>
+
+    <div class="slide">
+      <div class="intro-slide">
+        <section id="intro-0" class="hidden">1998</section>
+      </div>
+    </div>
+    <div class="slide">
+      <div class="intro-slide">
+        <section id="intro-1" class="hidden">
+          our first visit to Assembly
+        </section>
+      </div>
+    </div>
+    <div class="slide">
+      <div class="intro-slide">
+        <section id="intro-2" class="hidden">every year we said:</section>
+      </div>
+    </div>
+    <div class="slide">
+      <div class="intro-slide">
+        <section id="intro-3" class="hidden">
+          "next year we will make a demo"
+        </section>
+      </div>
+    </div>
+    <div class="slide">
+      <div class="intro-slide">
+        <section id="intro-4" class="hidden">25 years later...</section>
+      </div>
+    </div>
+    <div class="slide">
+      <div class="intro-slide">
+        <section id="intro-5" class="hidden">we finally made one!</section>
+      </div>
+    </div>
+
+    <div class="slide" id="credits-slide">
+      <section id="credits" class="hidden">
+        <h1>WAKE UP / RISE UP</h1>
+        <h3>music / direction / gfx / code / css / svg / font</h3>
+        <h2>outron</h2>
+        <h3>shaders / code / build scripts</h3>
+        <h2>seven_dc</h2>
+        <br />
+        <div>thanks for watching our first demo!</div>
+      </section>
+    </div>
+
+    <section id="fader"></section>
+
+    <section id="vignette">
+      <img src="img/vignette.jpg" style="width: 100%; height: 100%" />
+    </section>
+
+    <section id="info" onclick="play()">
+      <div>CLICK TO START</div>
+      <div style="font-size: 0.5em">
+        (beware: flashing lights and nostalgia ahead)
+      </div>
+    </section>
+
+    <section id="debug">
+      <div>now: <span id="debug-time"></span></div>
+      <div>fps: <span id="debug-fps"></span></div>
+      <div>delta: <span id="debug-delta"></span></div>
+      <div><span id="debug-output"></span></div>
+      <div id="debug-canvas"></div>
+      <div id="debug-light-color-buttons"></div>
+
+      <div>
+        <label for="text-input">Text: </label>
+        <input id="text-input" type="text" />
+        duration:
+        <input id="text-duration-input" type="number" value="10" /> delay:
+        <input id="text-delay-input" type="number" value="-1" /> spacing:
+        <input id="text-spacing-input" type="number" value="1.3229" />
+        style:
+        <select id="text-style-input">
+          <option value="METAL">METAL</option>
+          <option value="SUNSET">SUNSET</option>
+          <option value="SOLID_RED">SOLID RED</option>
+          <option value="SOLID_WHITE">SOLID WHITE</option>
+          <option value="PINK_STROKE">PINK STROKE</option>
+          <option value="SOLID_TEAL">SOLID TEAL</option>
+          <option value="SUNSET_STROKE">SUNSET STROKE</option>
+        </select>
+        <select id="text-slide-input">
+          <option value="text">LAYER 1</option>
+          <option value="text-2">LAYER 2</option>
+          <option value="text-3">LAYER 3</option>
+        </select>
+        <select id="text-animation-input">
+          <option value="text-ch-fadein">FADE 1</option>
+          <option value="text-ch-fadein-2">FADE 2</option>
+        </select>
+        <input type="button" onclick="setTextSlideText()" value="Change" />
+      </div>
+      <div>
+        <label for="display-element-id-input">Element ID: </label>
+        <select id="display-element-id-input">
+          <option value="outron">OUTRON logo</option>
+          <option value="webgl-canvas">Canvas</option>
+          <option value="webgl-canvas-2">Canvas 2</option>
+          <option value="text">Text Layer 1</option>
+          <option value="text-2">Text Layer 2</option>
+          <option value="text-3">Text Layer 3</option>
+          <option value="title">Demo title</option>
+          <option value="cyborg">Cyborg</option>
+          <option value="vignette">Vignette</option>
+          <option value="fader">Fader</option>
+          <option value="credits">Credits</option>
+          <option value="intro-0">Intro text 0</option>
+          <option value="intro-1">Intro text 1</option>
+          <option value="intro-2">Intro text 2</option>
+          <option value="intro-3">Intro text 3</option>
+          <option value="intro-4">Intro text 4</option>
+          <option value="intro-5">Intro text 5</option>
+        </select>
+        <label for="display-element-class-input">new class: </label>
+        <select id="display-element-class-input">
+          <option value="reset">reset</option>
+          <option value="fade-in">fade in</option>
+          <option value="fade-out">fade out</option>
+          <option value="fade-in-fast">fast fade in</option>
+          <option value="fade-out-fast">fast fade out</option>
+          <option value="blur-in">blur in</option>
+          <option value="blur-out">blur out</option>
+          <option value="blur">blur</option>
+          <option value="blur-fast">blur fast</option>
+          <option value="hue-rotate">rotate hue</option>
+          <option value="saturate">saturate</option>
+          <option value="brightness">brightness</option>
+          <option value="zoom-in">zoom in</option>
+          <option value="zoom-out">zoom out</option>
+          <option value="fade-from-white">fade from white</option>
+          <option value="fade-to-black">fade to black</option>
+          <option value="fade-from-black">fade from black</option>
+        </select>
+        <input type="button" onclick="changeElementClass()" value="Change" />
+      </div>
+      <div>
+        <fieldset id="debug-scenes">
+          <legend>Scenes</legend>
+          <input type="button" onclick="changeEffect(3)" value="Cube (0)" />
+        </fieldset>
+      </div>
+    </section>
+
+    <section id="debug-events">
+      <div>
+        <label
+          ><input
+            id="debug-events-show-only-current-events-checkbox"
+            type="checkbox"
+          />
+          show only current events</label
+        >
+      </div>
+      <div id="debug-events-table">
+        <table style="width: 100%">
+          <tbody id="debug-events-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <dialog id="edit-event-dialog">
+      <form>
+        <div>
+          <label>ID: </label>
+          <input id="edit-event-id" type="text" />
+        </div>
+        <br />
+        <div>
+          <label>Time: </label>
+          <input id="edit-event-time" type="number" />
+        </div>
+        <br />
+        <div>
+          <label>Type: </label>
+          <select id="edit-event-type">
+            <option value="1">Tunnel Palette / Variation</option>
+            <option value="2">Tunnel Texture</option>
+            <option value="3">Tunnel Stretch</option>
+            <option value="4">Hit</option>
+            <option value="5">Kick</option>
+            <option value="6">Light Color</option>
+            <option value="7">Display (element class)</option>
+            <option value="9">Text</option>
+            <option value="10">Change Effect</option>
+          </select>
+        </div>
+        <br />
+        <label>Parameters:</label>
+        <div>
+          <textarea
+            id="edit-event-json"
+            style="width: 500px; height: 150px"
+          ></textarea>
+        </div>
+        <div>
+          <button value="cancel" formmethod="dialog">Cancel</button>
+          <button
+            id="edit-event-save-button"
+            value="default"
+            formmethod="dialog"
+          >
+            Save
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <audio id="music" controls src="./audio/OUTRON_38_01.mp3"></audio>
+  </body>
+  <script>
+    const inputElements = document.getElementsByTagName("input");
+    for (let i = 0; i < inputElements.length; i++) {
+      console.log(inputElements.item(i).id);
+      inputElements.item(i).onkeydown = (event) => {
+        event.stopPropagation(true);
+      };
+    }
+
+    const textareaElements = document.getElementsByTagName("textarea");
+    for (let i = 0; i < textareaElements.length; i++) {
+      console.log(textareaElements.item(i).id);
+      textareaElements.item(i).onkeydown = (event) => {
+        event.stopPropagation(true);
+      };
+    }
+
+    let demoPlaying = false;
+
+    for (let i = 0; i < 6; i++) {
+      const text = document.getElementById(`intro-${i}`).textContent;
+      document.getElementById(`intro-${i}`).innerHTML = textToSVG({
+        text: text.toUpperCase().trim(),
+        charStyle: "",
+        bloom: false,
+        letterSpacing: 2,
+        shadowFill: "#f00",
+        strokeWidth: 0.5,
+        fill: "#fa0",
+        stroke: "#fa0",
+      });
+    }
+
+    /*
+    document.getElementById("slogan").innerHTML = textToSVG({
+      text: "WAKE UP",
+      charStyle: "",
+      fill: TEXT_STYLES.SOLID_RED.fill,
+      stroke: TEXT_STYLES.SOLID_RED.stroke,
+    });*/
+
+    function play() {
+      const url = new URL(document.location);
+      const musicEnabled = url.searchParams.get("music")
+        ? url.searchParams.get("music") === "true"
+        : true;
+      const clearEffects = url.searchParams.get("clear-effects") === "true";
+      const showDevTools = url.searchParams.get("dev-tools") === "true";
+      const showAudio = url.searchParams.get("show-audio") === "true";
+      const showTextures = url.searchParams.get("show-textures") === "true";
+      const showEvents = url.searchParams.get("show-events") === "true";
+      const showCursor = url.searchParams.get("show-cursor") === "true";
+
+      if (showDevTools === true) {
+        document.getElementById("debug").style.display = "block";
+        renderLightPaletteButtons();
+      }
+
+      if (showEvents === true) {
+        document.getElementById("debug-events").style.display = "block";
+      }
+
+      const audio = document.getElementById("music");
+
+      if (showAudio === true) {
+        audio.style.display = "inline-block";
+      }
+
+      if (!demoPlaying) {
+        if (musicEnabled === true) {
+          audio
+            .play()
+            .then(() => {
+              demoPlaying = true;
+              document.getElementById("info").style.display = "none";
+              if (!showCursor) {
+                document.getElementById("fader").style.cursor = "none";
+              }
+              //document.getElementById("outron").style.opacity = 0.0;
+              main({
+                musicEnabled,
+                clearEffects,
+                showDevTools,
+                showTextures,
+                showEvents,
+              });
+            })
+            .catch((error) => {
+              console.error(error);
+            });
+        } else {
+          demoPlaying = true;
+          document.getElementById("info").style.display = "none";
+          //document.getElementById("outron").style.opacity = 0.0;
+          main({ musicEnabled, clearEffects, showDevTools });
+        }
+      }
+    }
+
+    function renderLightPaletteButtons() {
+      const lightPaletteButtonsElement = document.getElementById(
+        "debug-light-color-buttons"
+      );
+      for (let i = 0; i < lightPalette.length; i++) {
+        const buttonElement = document.createElement("button");
+        buttonElement.type = "button";
+        buttonElement.style.backgroundColor = `rgb(${
+          lightPalette[i][0] * 255
+        },${lightPalette[i][1] * 255},${lightPalette[i][2] * 255})`;
+
+        buttonElement.onclick = (event) => {
+          console.log(lightPalette[i]);
+          eventToBeAdded = {
+            id: `light-color-${
+              timeline.getEventsByType(EVENT_TYPES.LIGHT_COLOR).length + 1
+            }`,
+            type: EVENT_TYPES.LIGHT_COLOR,
+            params: { index: i },
+          };
+        };
+        lightPaletteButtonsElement.appendChild(buttonElement);
+      }
+    }
+
+    function renderEvents(timeline, now) {
+      const showOnlyCurrentEvents = document.getElementById(
+        "debug-events-show-only-current-events-checkbox"
+      ).checked;
+      const elementsTableBodyElement = document.getElementById(
+        "debug-events-table-body"
+      );
+
+      if (now === undefined) {
+        now = document.getElementById("music").currentTime * 1000;
+      }
+
+      elementsTableBodyElement.innerHTML = "";
+
+      const currentEvents = timeline.getCurrentEvents(now);
+
+      timeline.events.forEach((event, index) => {
+        const eventRowElement = document.createElement("tr");
+        eventRowElement.id = event.id + "-row";
+
+        if (showOnlyCurrentEvents) {
+          if (currentEvents.find((e) => e.id === event.id)) {
+            eventRowElement.style.display = null;
+          } else {
+            eventRowElement.style.display = "none";
+          }
+        }
+
+        const eventStartCellElement = document.createElement("td");
+        eventStartCellElement.textContent = Math.floor(event.start);
+        eventStartCellElement.style.cursor = "pointer";
+        eventStartCellElement.style.textDecoration = "underline";
+        eventStartCellElement.onclick = (e) => {
+          document.getElementById("music").currentTime = event.start / 1000;
+        };
+        eventRowElement.appendChild(eventStartCellElement);
+
+        const eventIdCellElement = document.createElement("td");
+        eventIdCellElement.textContent = event.id;
+        eventIdCellElement.style.cursor = "pointer";
+        eventIdCellElement.style.textDecoration = "underline";
+        eventIdCellElement.onclick = (e) => {
+          document.getElementById("edit-event-id").value = event.id;
+          document.getElementById("edit-event-time").value = event.start;
+          document.getElementById("edit-event-type").value = event.type;
+          document.getElementById("edit-event-json").value =
+            event.params === undefined
+              ? ""
+              : JSON.stringify(event.params, null, 2);
+          document.getElementById("edit-event-save-button").onclick = () => {
+            event.params = JSON.parse(
+              document.getElementById("edit-event-json").value
+            );
+          };
+          document.getElementById("edit-event-dialog").show();
+        };
+        eventRowElement.appendChild(eventIdCellElement);
+
+        const eventTypeCellElement = document.createElement("td");
+        eventTypeCellElement.textContent = EVENT_TYPES.toString(event.type);
+        eventRowElement.appendChild(eventTypeCellElement);
+
+        const eventParamsCellElement = document.createElement("td");
+        eventParamsCellElement.style.width = "5px";
+        switch (event.type) {
+          case EVENT_TYPES.LIGHT_COLOR: {
+            const color = lightPalette[event.params.index];
+            eventParamsCellElement.style.backgroundColor = `rgb(${
+              color[0] * 255
+            },${color[1] * 255},${color[2] * 255})`;
+            break;
+          }
+          case EVENT_TYPES.TEXT: {
+            const color = lightPalette[event.params.index];
+            eventParamsCellElement.textContent = `${event.params.text} (${event.params.slide})`;
+            eventParamsCellElement.style.color =
+              TEXT_STYLES[event.params.style].fill;
+            break;
+          }
+          case EVENT_TYPES.DISPLAY: {
+            eventParamsCellElement.textContent = event.params.id;
+            break;
+          }
+          case EVENT_TYPES.EFFECT: {
+            eventParamsCellElement.textContent = EFFECTS[event.params.id].name;
+            break;
+          }
+          case EVENT_TYPES.PALETTE: {
+            eventParamsCellElement.textContent = event.params.index;
+            break;
+          }
+          case EVENT_TYPES.TEXTURE: {
+            switch (event.params.texture) {
+              case TEXTURES.STRIPES:
+                eventParamsCellElement.textContent = "Stripes";
+                break;
+              case TEXTURES.GRID:
+                eventParamsCellElement.textContent = "Grid";
+                break;
+            }
+
+            break;
+          }
+        }
+        eventRowElement.appendChild(eventParamsCellElement);
+
+        const eventRemoveCellElement = document.createElement("td");
+        eventRemoveCellElement.className = "remove-event";
+        eventRemoveCellElement.textContent = "x";
+        eventRemoveCellElement.onclick = (e) => {
+          timeline.removeEventById(event.id);
+          document.getElementById(event.id + "-row").remove();
+        };
+        eventRowElement.appendChild(eventRemoveCellElement);
+
+        elementsTableBodyElement.appendChild(eventRowElement);
+        /*
+        if (event.type === EVENT_TYPES.LIGHT_COLOR) {
+          const eventEditRowElement = document.createElement("tr");
+          eventEditRowElement.className = 'event-edit-row';
+          eventEditRowElement.id = event.id + "-row-edit";
+          const editEventCellElement = document.createElement("td");
+          lightPalette.forEach(color => {
+            const colorButton =
+          })
+
+
+          eventEditRowElement.appendChild(editEventCellElement);
+          elementsTableBodyElement.appendChild(eventEditRowElement);
+        }*/
+      });
+    }
+
+    let previousCurrentEventElements = [];
+
+    function updateEvents(timeline, now) {
+      const showOnlyCurrentEvents = document.getElementById(
+        "debug-events-show-only-current-events-checkbox"
+      ).checked;
+
+      const currentEvents = timeline.getCurrentEvents(now);
+
+      /*
+      if (
+        currentEvents.length === previousCurrentEventElements.length &&
+        currentEvents.every((event) =>
+          previousCurrentEventElements.includes(event)
+        )
+      ) {
+        return;
+      }*/
+
+      previousCurrentEventElements.forEach((element) => {
+        element.className = "";
+        if (showOnlyCurrentEvents) {
+          element.style.display = "none";
+        }
+      });
+
+      previousCurrentEventElements = [];
+
+      currentEvents.forEach((event) => {
+        const currentEventElement = document.getElementById(event.id + "-row");
+        currentEventElement.className = "current";
+        if (showOnlyCurrentEvents) {
+          currentEventElement.style.display = null;
+        }
+        previousCurrentEventElements.push(currentEventElement);
+      });
+    }
+
+    function setTextSlideText() {
+      //const textElement = document.getElementById("text");
+      const text = document.getElementById("text-input").value;
+      const duration = parseInt(
+        document.getElementById("text-duration-input").value
+      );
+      const delay = parseInt(document.getElementById("text-delay-input").value);
+      const style = document.getElementById("text-style-input").value;
+      const slide = document.getElementById("text-slide-input").value;
+      const letterSpacing = document.getElementById("text-spacing-input").value;
+      const animation = document.getElementById("text-animation-input").value;
+
+      eventToBeAdded = {
+        type: EVENT_TYPES.TEXT,
+        params: {
+          text,
+          style,
+          slide,
+          delay: !isNaN(delay) && delay !== -1 ? delay : undefined,
+          letterSpacing,
+          duration,
+          animation,
+        },
+      };
+    }
+
+    function changeElementClass() {
+      const id = document.getElementById("display-element-id-input").value;
+      const className = document.getElementById(
+        "display-element-class-input"
+      ).value;
+
+      eventToBeAdded = {
+        type: EVENT_TYPES.DISPLAY,
+        params: {
+          id,
+          className,
+        },
+      };
+    }
+
+    function changeEffect(id) {
+      eventToBeAdded = {
+        type: EVENT_TYPES.EFFECT,
+        params: {
+          id,
+        },
+      };
+    }
+  </script>
+</html>
