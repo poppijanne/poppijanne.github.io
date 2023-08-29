@@ -411,10 +411,10 @@ class FloppyEffect {
       //z += 3.0;
       //y += 3.0;
       //z += 3.0 + Math.sin(now * 0.0003);
-      //x +=
-      //  Math.cos((now + i) * 0.005) * 1.0 + Math.sin((now + i) * 0.001) * 0.2;
-      //y +=
-      //  Math.sin((now + i) * 0.003) * 0.1 + Math.sin((now + i) * 0.002) * 0.2;
+      x +=
+        Math.cos((now + i) * 0.005) * 1.0 + Math.sin((now + i) * 0.001) * 0.2;
+      y +=
+        Math.sin((now + i) * 0.003) * 0.1 + Math.sin((now + i) * 0.002) * 0.2;
       //x += Math.cos(now * 0.0005) * 3.0;
       //z += Math.sin(now * 0.0005) * 3.0;
 
