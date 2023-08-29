@@ -1,19 +1,71 @@
-class CubeEffect {
-  constructor({ id, canvas, resolution }) {
+// TODO
+// - array of switchable lights
+// - array of switchable cameras
+
+const BLURS = [
+  [0, 0, 0],
+  [1, 0, -1],
+  [-1, 0, 0],
+  [0, 1, -1],
+  [0, -1, 0],
+  [-1, -1, -1],
+  [1, 1, 0],
+  [-1, 1, -1],
+  [1, -1, 0],
+  [0.9, 0, -0.9],
+  [-0.9, 0, 0],
+  [0, 0.9, 0.9],
+  [0, -0.9, 0],
+  [-0.9, -0.9, -0.9],
+  [0.9, 0.9, 0],
+  [-0.9, 0.9, 0.9],
+  [0.9, -0.9, 0],
+  [0.8, 0, -0.8],
+  [-0.8, 0, 0],
+  [0, 0.8, 0.8],
+  [0, -0.8, 0],
+  [-0.8, -0.8, -0.8],
+  [0.8, 0.8, 0],
+  [-0.8, 0.8, 0.8],
+  [0.8, -0.8, 0],
+  [0.7, 0, -0.7],
+  [-0.7, 0, 0],
+  [0, 0.7, 0.7],
+  [0, -0.7, 0],
+  [-0.7, -0.7, -0.7],
+  [0.7, 0.7, 0],
+  [-0.7, 0.7, 0.7],
+  [0.7, -0.7, 0],
+];
+
+class FloppyEffect {
+  constructor({ id, resolution }) {
     this.id = id;
-    this.canvas = canvas;
+    this.canvas = document.createElement("canvas");
+    this.canvas.width = 512;
+    this.canvas.height = 512;
     this.resolution = resolution;
     this.gl = this.canvas.getContext("webgl", {
       alpha: false,
+      antialias: false,
+      powerPreference: "high-performance",
+      preserveDrawingBuffer: true,
     });
 
-    this.bgColor = [0.5, 0.5, 0.5, 1];
+    const gl = this.gl;
 
-    this.kick = false;
-    this.kickId = undefined;
-    this.kickStart = 0;
-    this.kickLength = 400;
-    this.kickCounter = 0;
+    console.log(
+      `max textures is ${gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS)}`
+    );
+
+    this.ambientLightColor = [0.5, 0.5, 0.5, 1];
+    this.lightColor = [3.0, 3.0, 3.0];
+
+    this.beat = false;
+    this.beatId = undefined;
+    this.beatStart = 0;
+    this.beatLength = 400;
+    this.beatCounter = 0;
 
     this.hit = false;
     this.hitId = undefined;
@@ -21,24 +73,23 @@ class CubeEffect {
     this.shakeId = "";
     this.shakeCounter = 0;
 
-    this.programInfo = new ProgramInfo({
+    this.complexShaderProgram = new ProgramInfo({
       gl: this.gl,
-      vertexShaderId: "cube-vertex-shader",
-      fragmentShaderId: "cube-fragment-shader",
+      vertexShaderId: "complex-vertex-shader",
+      fragmentShaderId: "complex-fragment-shader",
       attributes: [
         "vertexPosition",
         "textureCoord",
         "vertexNormal",
-        "tangent",
-        "bitangent",
+        "vertexTangent",
+        "vertexBitangent",
       ],
       uniforms: [
         "worldViewProjectionMatrix",
         "projectionMatrix",
         "viewMatrix",
         "worldMatrix",
-        "modelMatrix",
-        "lightDirection",
+        "lightPosition",
         "eyePosition",
         "directionalLightColor",
         "ambientLightColor",
@@ -47,59 +98,165 @@ class CubeEffect {
         "specularSampler",
         "metalSampler",
         "cubeSampler",
-        "flicker",
       ],
     });
 
-    const geometry = this.createCubeGeometry();
-
-    this.programInfo.addBuffersFromGeometry("cube", geometry);
-    bindBuffersToAttributes(
-      this.gl,
-      this.programInfo.buffers.cube,
-      this.programInfo
-    );
+    this.simpleNoLightsShaderProgram = new ProgramInfo({
+      gl: this.gl,
+      vertexShaderId: "simple-no-lights-vertex-shader",
+      fragmentShaderId: "simple-no-lights-fragment-shader",
+      attributes: ["vertexPosition", "textureCoord"],
+      uniforms: [
+        "worldViewProjectionMatrix",
+        "ambientLightColor",
+        "colorSampler",
+      ],
+    });
 
     const loader = new ResourceLoader();
 
-    this.cubeTexture = loader.loadCubeTexture(this.gl, "cube-2");
+    const cubeTexture = loader.loadCubeTexture(this.gl, "cube-2");
 
-    //this.cubeTexture = createTexture(this.gl, 512, 512);
-    //this.cubeTexture = loadTexture(this.gl, "/img/floppy/FloppyColors.png");
-    this.colorTexture = loader.loadTexture(
-      this.gl,
-      "floppy",
-      "FloppyColors.png"
-    );
+    const materials = {
+      Floppy: new Material({
+        name: "Floppy",
+        shaderProgram: this.complexShaderProgram,
+        textures: {
+          color: loader.loadTexture(this.gl, "floppy", "FloppyColors.png"),
+          normal: loader.loadTexture(this.gl, "floppy", "FloppyNormals.png"),
+          specular: loader.loadTexture(this.gl, "floppy", "FloppySpecular.png"),
+          metal: loader.loadTexture(this.gl, "floppy", "FloppyMetal.png"),
+          cube: cubeTexture,
+        },
+      }),
+      Room: new Material({
+        name: "Room",
+        shaderProgram: this.simpleNoLightsShaderProgram,
+        textures: {
+          color: loader.loadTexture(this.gl, "room", "RoomColors.png"),
+          //color: loader.loadTexture(this.gl, "room", "SkyColors.png"),
+          //color: loader.loadTexture(this.gl, "room", "RoomAO.png"),
+        },
+      }),
+    };
 
-    this.normalTexture = loader.loadTexture(
-      this.gl,
-      "floppy",
-      "FloppyNormals.png"
-    );
+    this.geometry = {};
 
-    this.specularTexture = loader.loadTexture(
-      this.gl,
-      "floppy",
-      "FloppySpecular.png"
-    );
+    this.geometry.floppy = new Geometry(this.createFloppyGeometry(), materials);
+    this.geometry.floppy.createBuffers(this.gl);
 
-    this.metalTexture = loader.loadTexture(
-      this.gl,
-      "floppy",
-      "FloppyMetal.png"
-    );
+    this.geometry.room = new Geometry(this.createRoomGeometry(), materials);
+    this.geometry.room.createBuffers(this.gl);
+
+    this.screenMaterial = new Material({
+      shaderProgram: new ProgramInfo({
+        gl: this.gl,
+        vertexShaderId: "flat-vertex-shader",
+        fragmentShaderId: "alpha-fragment-shader",
+        attributes: ["vertexPosition", "textureCoord"],
+        uniforms: ["colorSampler", "color"],
+      }),
+      textures: {
+        color: WebGLUtils.createTexture(
+          this.gl,
+          this.canvas.width,
+          this.canvas.height
+        ),
+      },
+    });
+    this.screenMesh = this.createPlaneMesh(this.screenMaterial);
+    this.screenMesh.createBuffers(this.gl);
+
+    this.objects = [
+      {
+        model: "floppy",
+        position: { x: 0, y: 0, z: 0 },
+        rotation: { x: 0.0007, y: 0.0006, z: 0.0005 },
+      },
+      {
+        model: "floppy",
+        position: { x: 2, y: 0, z: 2 },
+        rotation: { x: 0.0005, y: 0.0006, z: 0.0007 },
+      },
+      {
+        model: "floppy",
+        position: { x: -2, y: 0, z: 2 },
+        rotation: { x: 0.0002, y: 0.0003, z: 0.0004 },
+      },
+      {
+        model: "floppy",
+        position: { x: 0, y: -2, z: 2 },
+        rotation: { x: 0.0002, y: 0.0003, z: 0.0004 },
+      },
+    ];
+    /*
+    for (let i = 0; i < 10; i++) {
+      const object = {
+        model: "floppy",
+        position: {
+          x: (Math.random() * 2 - Math.random() * 2) * 3,
+          y: (Math.random() * 2 - Math.random() * 2) * 3,
+          z: (Math.random() * 2 - Math.random() * 2) * 3,
+        },
+        rotation: {
+          x: Math.random() / 1000,
+          y: Math.random() / 1000,
+          z: Math.random() / 1000,
+        },
+      };
+      if (object.position.x > 0 && object.position.x < 2) {
+        object.position.x += 2;
+      }
+      this.objects.push(object);
+    }
+    */
+
+    this.objects.push({
+      model: "room",
+      position: { x: 0, y: 0, z: 0 },
+      rotation: { x: 0.0004, y: 0.0005, z: 0.0006 },
+      //rotation: { y: 0.0, x: 0.0, z: 0.0 },
+    });
+
+    this.currentMaterial;
+    this.currentMesh;
 
     // Flip image pixels into the bottom-to-top order that WebGL expects.
     this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
+
+    //this.texture = WebGLUtils.createTexture(gl, this.width, this.height);
+    this.framebuffer = gl.createFramebuffer();
+    this.depthbuffer = gl.createRenderbuffer();
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
+    gl.framebufferTexture2D(
+      gl.FRAMEBUFFER,
+      gl.COLOR_ATTACHMENT0,
+      gl.TEXTURE_2D,
+      this.screenMaterial.textures.color,
+      0
+    );
+    gl.bindRenderbuffer(gl.RENDERBUFFER, this.depthbuffer);
+    gl.renderbufferStorage(
+      gl.RENDERBUFFER,
+      gl.DEPTH_COMPONENT16,
+      this.canvas.width,
+      this.canvas.height
+    );
+    gl.framebufferRenderbuffer(
+      gl.FRAMEBUFFER,
+      gl.DEPTH_ATTACHMENT,
+      gl.RENDERBUFFER,
+      this.depthbuffer
+    );
   }
 
   processEvents(events = [], now = 0, delta = 1) {
     this.hit = false;
     this.hitId = undefined;
-    this.kick = false;
-    this.kickId = undefined;
-    this.kickStart = 0;
+    this.beat = false;
+    this.beatId = undefined;
+    this.beatStart = 0;
 
     events.forEach((event) => {
       switch (event.type) {
@@ -109,38 +266,75 @@ class CubeEffect {
             this.hitId = event.id;
           }
           break;
-        case EVENT_TYPES.KICK:
-          if (now - event.start < this.kickLength) {
-            this.kick = true;
-            this.kickId = event.id;
-            this.kickStart = event.start;
+        case EVENT_TYPES.BEAT:
+          if (now - event.start < this.beatLength) {
+            this.beat = true;
+            this.beatId = event.id;
+            this.beatStart = event.start;
             if (this.shakeId !== event.id) {
               this.shakeId = event.id;
               this.shakeCounter = 1.0;
             }
           }
           break;
-        case EVENT_TYPES.LIGHT_COLOR:
-          const targetColor = lightPalette[event.params.index];
-          this.bgColor[0] = (this.bgColor[0] * 99 + targetColor[0]) / 100;
-          this.bgColor[1] = (this.bgColor[1] * 99 + targetColor[1]) / 100;
-          this.bgColor[2] = (this.bgColor[2] * 99 + targetColor[2]) / 100;
+        case EVENT_TYPES.BG_LIGHT_COLOR:
+          {
+            const targetColor = lightPalette[event.params.index];
+            this.ambientLightColor[0] =
+              (this.ambientLightColor[0] * 99 + targetColor[0]) / 100;
+            this.ambientLightColor[1] =
+              (this.ambientLightColor[1] * 99 + targetColor[1]) / 100;
+            this.ambientLightColor[2] =
+              (this.ambientLightColor[2] * 99 + targetColor[2]) / 100;
+          }
           break;
+        case EVENT_TYPES.LIGHT_COLOR: {
+          const targetColor = lightPalette[event.params.index];
+          this.lightColor[0] = (this.lightColor[0] * 99 + targetColor[0]) / 100;
+          this.lightColor[1] = (this.lightColor[1] * 99 + targetColor[1]) / 100;
+          this.lightColor[2] = (this.lightColor[2] * 99 + targetColor[2]) / 100;
+          break;
+        }
         default:
           break;
       }
     });
   }
 
-  render(now = 0, delta = 1) {
+  render({ canvas, now = 0, delta = 1 /*, x = 0, y = 0, z = 0*/ }) {
     const gl = this.gl;
 
-    /*
-    let y = 0,
-      x = 0,
-      z = 0;
-      */
-    let f = 1.0 - (now - this.kickStart) / this.kickLength;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
+
+    if (
+      canvas.width !== this.canvas.width ||
+      canvas.height !== this.canvas.height
+    ) {
+      console.log("FloppyEffect.render resize canvas");
+      this.canvas.width = canvas.width;
+      this.canvas.height = canvas.height;
+      gl.deleteTexture(this.screenMaterial.textures.color);
+      this.screenMaterial.textures.color = WebGLUtils.createTexture(
+        gl,
+        this.canvas.width,
+        this.canvas.height
+      );
+      gl.framebufferTexture2D(
+        gl.FRAMEBUFFER,
+        gl.COLOR_ATTACHMENT0,
+        gl.TEXTURE_2D,
+        this.screenMaterial.textures.color,
+        0
+      );
+      gl.renderbufferStorage(
+        gl.RENDERBUFFER,
+        gl.DEPTH_COMPONENT16,
+        this.canvas.width,
+        this.canvas.height
+      );
+    }
+
+    let f = 1.0 - (now - this.beatStart) / this.beatLength;
 
     if (this.shakeCounter > 0) {
       y = Math.sin(this.shakeCounter * 20.0) * 0.02 /* * f*/;
@@ -150,229 +344,321 @@ class CubeEffect {
     gl.viewport(0, 0, this.canvas.width, this.canvas.height);
     gl.enable(gl.DEPTH_TEST); // Enable depth testing
     gl.enable(gl.CULL_FACE); // draw only front facing faces
-    gl.useProgram(this.programInfo.program);
-    gl.clearColor(this.bgColor[0], this.bgColor[1], this.bgColor[2], 1.0); // Clear to BG color, fully opaque
+    //gl.useProgram(this.shaderProgram.program);
+
+    gl.clearColor(
+      this.ambientLightColor[0],
+      this.ambientLightColor[1],
+      this.ambientLightColor[2],
+      1.0
+    ); // Clear to BG color, fully opaque
+
+    //gl.clearColor(0, 0, 0, 1.0); // Clear to BG color, fully opaque
     gl.clearDepth(1.0); // Clear everything
     gl.depthFunc(gl.LEQUAL); // Near things obscure far things
+
+    //gl.enable(gl.BLEND);
+    //gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    //gl.blendFunc(gl.DST_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    //gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, enum src_alpha, enum dst_alpha);
+
+    const frames = BLURS.length - 1;
+    const range = 60;
+    let j = 0;
+
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    //gl.clear(gl.DEPTH_BUFFER_BIT);
 
-    //const fieldOfView = ((60 + Math.sin(now * 0.0001) * 20.0) * Math.PI) / 180; // in radians
-    const fieldOfView = (60 * Math.PI) / 180; // in radians
-    const aspect = gl.canvas.width / gl.canvas.height;
-    const zNear = 0.1;
-    const zFar = 200.0;
-    const projectionMatrix = mat4.create();
-    // note: glmatrix.js always has the first argument
-    // as the destination to receive the result.
-    mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
+    // Clear render-to-texture
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-    // Compute the camera's matrix
-    //const camera = [0, 0, -3];
+    this.screenMesh.material.use(gl);
+    this.screenMesh.bindBuffersToShaderProgramAttributes(this.gl);
 
-    const z = 3.0 + Math.sin(now * 0.0003) * 1.0;
+    this.screenMesh.material.shaderProgram.setRGBAUniform(
+      "color",
+      [0.0, 0.0, 0.0, 1.0]
+    );
 
-    const camera = [0, 0, z];
+    this.screenMesh.draw(gl);
+    gl.disable(gl.BLEND);
+
+    //gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
+
+    for (let i = -range / 2; i <= range / 2; i += range / frames) {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      //gl.clear(gl.DEPTH_BUFFER_BIT);
+      //const fieldOfView = ((60 + Math.sin(now * 0.0001) * 20.0) * Math.PI) / 180; // in radians
+      const fieldOfView = (60 * Math.PI) / 180; // in radians
+      const aspect = gl.canvas.width / gl.canvas.height;
+      const zNear = 0.1;
+      const zFar = 200.0;
+      const projectionMatrix = mat4.create();
+      // note: glmatrix.js always has the first argument
+      // as the destination to receive the result.
+      mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
+
+      // Compute the camera's matrix
+      //const camera = [0, 0, -3];
+      let x = BLURS[j][0] * 0.02;
+      let y = BLURS[j][1] * 0.02;
+      let z = BLURS[j][2] * 0.02;
+      //let x = 0;
+      //let y = 0;
+      z += 3.0 + Math.sin((now + i) * 0.0003);
+      //z += 3.0;
+      //y += 3.0;
+      //z += 3.0 + Math.sin(now * 0.0003);
+      //x +=
+      //  Math.cos((now + i) * 0.005) * 1.0 + Math.sin((now + i) * 0.001) * 0.2;
+      //y +=
+      //  Math.sin((now + i) * 0.003) * 0.1 + Math.sin((now + i) * 0.002) * 0.2;
+      //x += Math.cos(now * 0.0005) * 3.0;
+      //z += Math.sin(now * 0.0005) * 3.0;
+
+      j = (j + 1) % BLURS.length;
+
+      const tz = Math.cos((now + i) * 0.0003);
+      const tx = Math.sin((now + i) * 0.0005) * 0.1;
+      const ty = Math.cos((now + i) * 0.0002) * 0.1;
+
+      const camera = [x, y, -z];
+      //const camera = [0, 0, 0];
+      const target = [tx, ty, tz];
+      //const target = [0, 0, 0];
+      const up = [0, 1, 0];
+
+      const cameraMatrix = mat4.create();
+      mat4.targetTo(cameraMatrix, camera, target, up);
+
+      const viewMatrix = mat4.create();
+      mat4.inverse(viewMatrix, cameraMatrix);
+
+      const viewProjectionMatrix = mat4.create();
+      mat4.multiply(viewProjectionMatrix, projectionMatrix, viewMatrix);
+
+      this.currentMaterial = undefined;
+      this.currentMesh = undefined;
+
+      this.objects.forEach((object) => {
+        this.geometry[object.model].meshes.forEach((mesh) => {
+          if (this.currentMaterial !== mesh.material) {
+            mesh.material.use(gl);
+            this.currentMaterial = mesh.material;
+          }
+
+          //mesh.material.shaderProgram.setMatrixUniform("viewMatrix", viewMatrix);
+
+          mesh.material.shaderProgram.setVertex3Uniform(
+            "lightPosition",
+            [0.5, 2.0, 0.0]
+          );
+
+          mesh.material.shaderProgram.setVertex3Uniform("eyePosition", camera);
+
+          mesh.material.shaderProgram.setRGBAUniform("directionalLightColor", [
+            this.lightColor[0],
+            this.lightColor[1],
+            this.lightColor[2],
+            1.0,
+          ]);
+
+          mesh.material.shaderProgram.setRGBAUniform("ambientLightColor", [
+            this.ambientLightColor[0] * 0.8,
+            this.ambientLightColor[1] * 0.8,
+            this.ambientLightColor[2] * 0.8,
+            1.0,
+          ]);
+
+          // Compute a view projection matrix
+
+          const worldMatrix = mat4.create();
+
+          mat4.translate(
+            worldMatrix, // destination matrix
+            worldMatrix, // matrix to rotate
+            [object.position.x, object.position.y, object.position.z]
+          );
+
+          //if (object.model === "floppy") {
+          mat4.rotate(
+            worldMatrix, // destination matrix
+            worldMatrix, // matrix to rotate
+            (now + i) * object.rotation.x, // amount to rotate in radians
+            //[0.3, 0.3, 0.3]
+            [0.0, 1.0, 0.0]
+          );
+
+          mat4.rotate(
+            worldMatrix, // destination matrix
+            worldMatrix, // matrix to rotate
+            (now + i) * object.rotation.y, // amount to rotate in radians
+            //[0.3, 0.3, 0.3]
+            [1.0, 0.0, 0.0]
+          );
+
+          mat4.rotate(
+            worldMatrix, // destination matrix
+            worldMatrix, // matrix to rotate
+            (now + i) * object.rotation.z, // amount to rotate in radians
+            //[0.3, 0.3, 0.3]
+            [0.0, 0.0, 1.0]
+          );
+          //}
+
+          const worldViewProjectionMatrix = mat4.create();
+          mat4.multiply(
+            worldViewProjectionMatrix,
+            viewProjectionMatrix,
+            worldMatrix
+          );
+
+          mesh.material.shaderProgram.setMatrixUniform(
+            "worldViewProjectionMatrix",
+            worldViewProjectionMatrix
+          );
+
+          mesh.material.shaderProgram.setMatrixUniform(
+            "worldMatrix",
+            worldMatrix
+          );
+
+          if (this.currentMesh !== mesh) {
+            mesh.bindBuffersToShaderProgramAttributes(gl);
+            this.currentMesh = mesh;
+          }
+          mesh.draw(gl);
+        });
+      });
+
+      // render texture to screen
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      gl.enable(gl.BLEND);
+      gl.disable(gl.DEPTH_TEST); // Enable depth testing
+      gl.disable(gl.CULL_FACE); // draw only front facing faces
+      //gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      //gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+
+      this.screenMesh.material.use(gl);
+      this.screenMesh.bindBuffersToShaderProgramAttributes(this.gl);
+
+      this.screenMesh.material.shaderProgram.setRGBAUniform(
+        "color",
+        //j == 1 ? [0.8, 0.8, 0.8, 1.0] : [1.0, 1.0, 1.0, 1.0 / frames]
+        [1.0, 1.0, 1.0, 1.0 / (frames / 2)]
+      );
+
+      this.screenMesh.draw(gl);
+      gl.disable(gl.BLEND);
+      gl.enable(gl.DEPTH_TEST); // Enable depth testing
+      gl.enable(gl.CULL_FACE); // draw only front facing faces
+    }
+
     /*
-    //const camera = [0, 0, 0];
-    const target = [0, 0, 0];
-    const up = [0, 1, 0];
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    //gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 
-    const cameraMatrix = mat4.create();
-    mat4.lookAt(cameraMatrix, camera, target, up);
+    this.screenMesh.material.use(gl);
+    this.screenMesh.bindBuffersToShaderProgramAttributes(this.gl);
 
-    const viewMatrix = mat4.create();
-    mat4.inverse(viewMatrix, cameraMatrix);
+    this.screenMesh.material.shaderProgram.setFloatUniform(
+      "flicker",
+      (Math.sin(now * 300.0) + Math.cos(now * 200.0)) * 0.01
+    );
+
+    this.screenMesh.draw(gl);
     */
 
-    const viewMatrix = mat4.create();
-    // Compute the camera's matrix
-    mat4.translate(
-      viewMatrix, // destination matrix
-      viewMatrix, // matrix to translate
-      [0, 0, -z]
-    ); // amount to translate
-    /*
-    mat4.rotate(
-      viewMatrix, // destination matrix
-      viewMatrix, // matrix to rotate
-      now * 0.0006, // amount to rotate in radians
-      //[0.3, 0.3, 0.3]
-      [0.0, 0.0, 1.0]
-    );
-*/
-    // Compute a view projection matrix
-    const viewProjectionMatrix = mat4.create();
-    mat4.multiply(viewProjectionMatrix, projectionMatrix, viewMatrix);
+    //console.log(gl.FRAMEBUFFER_COMPLETE);
+    //console.log(gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT);
+    //console.log(gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS);
+    //console.log(gl.checkFramebufferStatus(gl.FRAMEBUFFER));
 
-    const worldMatrix = mat4.create();
-    /*
-    mat4.rotate(
-      worldMatrix, // destination matrix
-      worldMatrix, // matrix to rotate
-      now * 0.0007, // amount to rotate in radians
-      //[0.3, 0.3, 0.3]
-      [0.0, 1.0, 0.0]
-    );
-*/
+    //gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    //gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 
-    mat4.rotate(
-      worldMatrix, // destination matrix
-      worldMatrix, // matrix to rotate
-      now * 0.0007, // amount to rotate in radians
-      //[0.3, 0.3, 0.3]
-      [0.0, 1.0, 0.0]
-    );
+    //WebGLUtils.copyCanvasToTexture(gl, this.canvas, texture);
 
-    mat4.rotate(
-      worldMatrix, // destination matrix
-      worldMatrix, // matrix to rotate
-      now * 0.0006, // amount to rotate in radians
-      //[0.3, 0.3, 0.3]
-      [1.0, 0.0, 0.0]
-    );
-
-    mat4.rotate(
-      worldMatrix, // destination matrix
-      worldMatrix, // matrix to rotate
-      now * 0.0005, // amount to rotate in radians
-      //[0.3, 0.3, 0.3]
-      [0.0, 0.0, 1.0]
-    );
-
-    const worldViewProjectionMatrix = mat4.create();
-    mat4.multiply(worldViewProjectionMatrix, viewProjectionMatrix, worldMatrix);
-
-    const modelMatrix = mat4.create();
-    /*
-    mat4.rotate(
-      modelMatrix, // destination matrix
-      modelMatrix, // matrix to rotate
-      now * 0.0007, // amount to rotate in radians
-      //[0.3, 0.3, 0.3]
-      [0.0, 1.0, 0.0]
-    );*/
-
-    // Set the drawing position to the "identity" point, which is
-    // the center of the scene.
-    /*
-    const modelViewMatrix = mat4.create();
-    // Compute the camera's matrix
-    mat4.translate(
-      modelViewMatrix, // destination matrix
-      modelViewMatrix, // matrix to translate
-      [
-        x, // + Math.cos(now * 0.0005) * 0.15,
-        y, // + Math.sin(now * 0.0001) * 0.15,
-        z - 4, // + 2.0 + Math.sin(now * 0.0005) * 2.0,
-      ]
-    ); // amount to translate
-
-    mat4.rotate(
-      modelViewMatrix, // destination matrix
-      modelViewMatrix, // matrix to rotate
-      now * 0.0015, // amount to rotate in radians
-      [1, 0.6, 0.3]
-    );*/
-
-    // Set the shader uniforms
-
-    gl.uniformMatrix4fv(
-      this.programInfo.uniforms.worldViewProjectionMatrix,
-      false,
-      worldViewProjectionMatrix
-    );
-
-    /*
-    gl.uniformMatrix4fv(
-      this.programInfo.uniforms.modelViewMatrix,
-      false,
-      modelViewMatrix
-    );
-
-    gl.uniformMatrix4fv(
-      this.programInfo.uniforms.projectionMatrix,
-      false,
-      projectionMatrix
-    );
-    */
-
-    gl.uniformMatrix4fv(
-      this.programInfo.uniforms.worldMatrix,
-      false,
-      worldMatrix
-    );
-
-    gl.uniformMatrix4fv(
-      this.programInfo.uniforms.viewMatrix,
-      false,
-      viewMatrix
-    );
-
-    gl.uniformMatrix4fv(
-      this.programInfo.uniforms.modelMatrix,
-      false,
-      modelMatrix
-    );
-
-    gl.uniform3fv(this.programInfo.uniforms.lightDirection, [0.5, 2.0, 0.0]);
-    gl.uniform3fv(this.programInfo.uniforms.eyePosition, camera);
-    gl.uniform4fv(
-      this.programInfo.uniforms.directionalLightColor,
-      [3.0, 2.0, 2.0, 1]
-    );
-    gl.uniform4fv(
-      this.programInfo.uniforms.ambientLightColor,
-      //[0.7, 0.7, 0.7, 1.0]
-      //[0.3, 0.3, 0.3, 1.0],
-      //[0.1, 0.1, 0.1, 1.0]
-      [this.bgColor[0] * 0.8, this.bgColor[1] * 0.8, this.bgColor[2] * 0.8, 1.0]
-    );
-
-    gl.uniform1f(
-      this.programInfo.uniforms.flicker,
-      (Math.sin(now * 0.03) + Math.cos(now * 0.02)) * 0.01
-    );
-
-    // Tell WebGL we want to affect texture unit 0
-    gl.activeTexture(gl.TEXTURE0);
-    // Bind the texture to texture unit 0
-    gl.bindTexture(gl.TEXTURE_2D, this.colorTexture);
-    // Tell the shader we bound the texture to texture unit 0
-    gl.uniform1i(this.programInfo.uniforms.colorSampler, 0);
-
-    gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_2D, this.normalTexture);
-    gl.uniform1i(this.programInfo.uniforms.normalSampler, 1);
-
-    gl.activeTexture(gl.TEXTURE2);
-    gl.bindTexture(gl.TEXTURE_2D, this.specularTexture);
-    gl.uniform1i(this.programInfo.uniforms.specularSampler, 2);
-
-    gl.activeTexture(gl.TEXTURE3);
-    gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.cubeTexture);
-    gl.uniform1i(this.programInfo.uniforms.cubeSampler, 3);
-
-    gl.activeTexture(gl.TEXTURE4);
-    gl.bindTexture(gl.TEXTURE_2D, this.metalTexture);
-    gl.uniform1i(this.programInfo.uniforms.metalSampler, 4);
-
-    drawGeometry(gl, this.programInfo.buffers.cube, this.programInfo);
-    //drawGeometryLines(gl, this.programInfo.buffers.cube, this.programInfo);
-
-    //gl.activeTexture(gl.TEXTURE0);
-    //gl.bindTexture(gl.TEXTURE_2D, this.displayTexture);
-    //gl.uniform1i(this.programInfo.uniforms.sampler, 0);
-
-    //drawGeometry(gl, this.programInfo.buffers.display, this.programInfo);
+    return this.canvas;
   }
 
-  createCubeGeometry() {
-    const meshes = parseOBJ(`
+  createPlaneMesh(material) {
+    return new Mesh(
+      {
+        name: "screen",
+        vertices: [
+          -1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 1.0, 1.0, 0.0, -1.0, 1.0, 0.0,
+        ],
+        indices: [0, 1, 2, 0, 2, 3],
+      },
+      material
+    );
+  }
 
-    # Blender 3.6.1
-    # www.blender.org
-    mtllib floppy.mtl
+  createRoomGeometry() {
+    const size = 5;
+    const meshes = parseOBJ(`
+    o Room
+    v -${size} -${size} ${size}
+    v -${size} ${size} ${size}
+    v -${size} -${size} -${size}
+    v -${size} ${size} -${size}
+    v ${size} -${size} ${size}
+    v ${size} ${size} ${size}
+    v ${size} -${size} -${size}
+    v ${size} ${size} -${size}
+    vn 1.0 -0.0 -0.0
+    vn -0.0 -0.0 1.0
+    vn -1.0 -0.0 -0.0
+    vn -0.0 -0.0 -1.0
+    vn -0.0 1.0 -0.0
+    vn -0.0 -1.0 -0.0
+    vt 0.5 1.0
+    vt 0.0 0.5
+    vt 0.0 1.0
+    vt 0.5 1.0
+    vt 0.0 0.5
+    vt 0.0 1.0
+    vt 0.5 1.0
+    vt 0.0 0.5
+    vt 0.0 1.0
+    vt 0.5 1.0
+    vt 0.0 0.5
+    vt 0.0 1.0
+    vt 0.5 0.5
+    vt 1.0 0.0
+    vt 0.5 0.0
+    vt 0.5 1.0
+    vt 1.0 0.5
+    vt 0.5 0.5
+    vt 0.5 0.5
+    vt 0.5 0.5
+    vt 0.5 0.5
+    vt 0.5 0.5
+    vt 1.0 0.5
+    vt 1.0 1.0
+    s 0
+    usemtl Room
+    f 3/1/1 2/2/1 1/3/1
+    f 7/4/2 4/5/2 3/6/2
+    f 5/7/3 8/8/3 7/9/3
+    f 1/10/4 6/11/4 5/12/4
+    f 1/13/5 7/14/5 3/15/5
+    f 6/16/6 4/17/6 8/18/6
+    f 3/1/1 4/19/1 2/2/1
+    f 7/4/2 8/20/2 4/5/2
+    f 5/7/3 6/21/3 8/8/3
+    f 1/10/4 2/22/4 6/11/4
+    f 1/13/5 5/23/5 7/14/5
+    f 6/16/6 2/24/6 4/17/6 
+    `);
+    return meshes;
+  }
+
+  createFloppyGeometry() {
+    const meshes = parseOBJ(`
     o Floppy
     v 0.996603 -0.832859 -0.037270
     v 0.903339 -0.583037 -0.031835
@@ -2916,6 +3202,6 @@ class CubeEffect {
     f 152/725/7 455/937/7 452/726/7
     f 148/728/23 454/728/23 455/729/23
     `);
-    return meshes[0].toBuffers();
+    return meshes;
   }
 }

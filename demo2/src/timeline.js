@@ -39,41 +39,32 @@ class Timeline {
 }
 
 const EVENT_TYPES = {
-  HIT: 4,
-  KICK: 5,
-  PALETTE: 1,
-  LIGHT_COLOR: 6,
-  TEXTURE: 2,
-  STRETCH: 3,
-  DISPLAY: 7,
-  SHAKE: 8,
-  TEXT: 9,
-  EFFECT: 10,
-  EFFECTFADE: 11,
+  EFFECT: 1,
+  BEAT: 2,
+  CLASSNAME: 4,
+  CAMERA: 10,
+  LIGHT: 20,
+  LIGHT_COLOR: 21,
+  BG_LIGHT_COLOR: 22,
+  TEXT: 30,
   toString(type) {
     switch (type) {
-      case EVENT_TYPES.HIT:
-        return "Hit";
-      case EVENT_TYPES.KICK:
-        return "Kick";
-      case EVENT_TYPES.PALETTE:
-        return "Palette";
-      case EVENT_TYPES.TEXTURE:
-        return "Texture";
-      case EVENT_TYPES.STRETCH:
-        return "Stretch";
-      case EVENT_TYPES.LIGHT_COLOR:
-        return "Light Color";
-      case EVENT_TYPES.DISPLAY:
-        return "Display";
-      case EVENT_TYPES.SHAKE:
-        return "Shake";
-      case EVENT_TYPES.TEXT:
-        return "Text";
       case EVENT_TYPES.EFFECT:
         return "Effect";
-      case EVENT_TYPES.EFFECTFADE:
-        return "Effect Fade";
+      case EVENT_TYPES.BEAT:
+        return "Beat";
+      case EVENT_TYPES.CLASSNAME:
+        return "Class";
+      case EVENT_TYPES.CAMERA:
+        return "Camera";
+      case EVENT_TYPES.LIGHT:
+        return "Light";
+      case EVENT_TYPES.LIGHT_COLOR:
+        return "Light color";
+      case EVENT_TYPES.BG_LIGHT_COLOR:
+        return "BG light color";
+      case EVENT_TYPES.TEXT:
+        return "Text";
       default:
         return "?";
     }

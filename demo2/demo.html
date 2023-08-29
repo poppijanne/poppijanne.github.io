@@ -5,32 +5,33 @@
     <base href="https://poppijanne.github.io/demo2/" />
     <script src="./src/matrix.js"></script>
     <script src="./src/palette.js"></script>
+    <script src="./src/material.js"></script>
+    <script src="./src/geometry.js"></script>
     <script src="./src/resource-loader.js"></script>
     <script src="./src/obj-loader.js"></script>
     <script src="./src/timeline.js"></script>
     <script src="./src/events.js"></script>
     <script src="./src/text.js"></script>
     <script src="./src/webgl.js"></script>
-    <script src="./src/geometry.js"></script>
     <script src="./src/canvas.js"></script>
     <script src="./src/effects.js"></script>
-    <script src="./src/effect-cube.js"></script>
+    <script src="./src/fx/floppy.js"></script>
+    <script src="./src/fx/texture-to-canvas.js"></script>
     <script src="./src/demo.js"></script>
 
     <!-- CUBE EFFECT SHADERS -->
 
-    <script id="cube-vertex-shader" type="x-shader/x-vertex">
+    <script id="complex-vertex-shader" type="x-shader/x-vertex">
 
       attribute vec4 aVertexPosition;
       attribute vec2 aTextureCoord;
       attribute vec3 aVertexNormal;
-      attribute vec3 aTangent;
-      attribute vec3 aBitangent;
+      attribute vec3 aVertexTangent;
+      attribute vec3 aVertexBitangent;
 
       varying highp vec2 vTextureCoord;
-      varying highp vec3 vVertexNormal;
-      varying highp vec3 vTangentLightDirection;
-      //varying highp vec3 vTangentEyePosition;
+      //varying highp vec3 vVertexNormal;
+      varying highp vec3 vTangentLightPosition;
       varying highp vec3 vTangentSurfaceToLight;
       varying highp vec3 vTangentSurfaceToEye;
       varying highp vec3 vTangentPosition;
@@ -40,12 +41,11 @@
       uniform mat4 uWorldViewProjectionMatrix;
       uniform mat4 uProjectionMatrix;
       uniform mat4 uViewMatrix;
-      uniform mat4 uModelMatrix;
       // rotation of the world (around the object)
       uniform mat4 uWorldMatrix;
-      uniform vec3 uLightDirection;
+      uniform vec3 uLightPosition;
       uniform vec3 uEyePosition;
-
+      /*
       highp mat3 transpose(in highp mat3 inMatrix) {
         highp vec3 i0 = inMatrix[0];
         highp vec3 i1 = inMatrix[1];
@@ -57,31 +57,42 @@
           vec3(i0.z, i1.z, i2.z)
         );
       }
+      */
+      highp mat3 transpose(in highp mat3 inMatrix) {
+        return mat3(
+          vec3(inMatrix[0][0], inMatrix[1][0], inMatrix[2][0]),
+          vec3(inMatrix[0][1], inMatrix[1][1], inMatrix[2][1]),
+          vec3(inMatrix[0][2], inMatrix[1][2], inMatrix[2][2])
+        );
+      }
 
       void main() {
-        vec3 t = normalize(mat3(uWorldMatrix) * mat3(uModelMatrix) * aTangent);
-        vec3 b = normalize(mat3(uWorldMatrix) * mat3(uModelMatrix) * aBitangent);
-        vec3 n = normalize(mat3(uWorldMatrix) * mat3(uModelMatrix) * aVertexNormal);
+        vec3 t = normalize(mat3(uWorldMatrix) * aVertexTangent);
+        vec3 b = normalize(mat3(uWorldMatrix) * aVertexBitangent);
+        vec3 n = normalize(mat3(uWorldMatrix) * aVertexNormal);
         mat3 transposedTBN = transpose(mat3(t, b, n));
-        vTangentLightDirection = transposedTBN * uLightDirection;
-        //vTangentLightDirection = transposedTBN * vec3(uWorldMatrix * uViewMatrix * vec4(uLightDirection,1.0));
+        vTangentLightPosition = transposedTBN * uLightPosition;
+        //vTangentLightPosition = transposedTBN * vec3(uWorldMatrix * uViewMatrix * vec4(uLightPosition,1.0));
         vTangentEyePosition = transposedTBN * uEyePosition;
-        //vTangentEyePosition = transposedTBN * vec3(uProjectionMatrix * vec4(uEyePosition,1.0));
-        vTangentPosition = transposedTBN * vec3(uWorldMatrix * uModelMatrix * aVertexPosition);
-        vTangentSurfaceToLight = vTangentLightDirection - vTangentPosition;
+        //vTangentEyePosition = transposedTBN * vec3(uViewMatrix * vec4(uEyePosition,1.0));
+        vTangentPosition = transposedTBN * vec3(uWorldMatrix * aVertexPosition);
+        vTangentSurfaceToLight = vTangentLightPosition - vTangentPosition;
         vTangentSurfaceToEye = vTangentEyePosition - vTangentPosition;
-        gl_Position = uWorldViewProjectionMatrix * uModelMatrix * aVertexPosition;
         vTextureCoord = aTextureCoord;
+        gl_Position = uWorldViewProjectionMatrix * aVertexPosition;
+
+
+        //vTangentEyePosition = vec3(uViewMatrix * vec4(uEyePosition,1.0));
         //vTangentEyePosition = uEyePosition;
         //vTangentPosition = vec3(uWorldMatrix * aVertexPosition);
       }
     </script>
 
-    <script id="cube-fragment-shader" type="x-shader/x-fragment">
+    <script id="complex-fragment-shader" type="x-shader/x-fragment">
       precision mediump float;
 
       varying highp vec2 vTextureCoord;
-      varying highp vec3 vTangentLightDirection;
+      varying highp vec3 vTangentLightPosition;
       varying highp vec3 vTangentSurfaceToLight;
       varying highp vec3 vTangentSurfaceToEye;
       varying highp vec3 vTangentPosition;
@@ -92,7 +103,6 @@
       uniform sampler2D uSpecularSampler;
       uniform sampler2D uMetalSampler;
       uniform samplerCube uCubeSampler;
-      uniform float uFlicker;
       uniform vec4 uDirectionalLightColor;
       uniform vec4 uAmbientLightColor;
 
@@ -100,11 +110,10 @@
 
         vec3 surfaceToLightDirection = normalize(vTangentSurfaceToLight);
         vec3 surfaceToViewDirection = normalize(vTangentSurfaceToEye);
-        vec3 viewToSurfaceDirection = normalize(vTangentSurfaceToEye);
         vec3 halfVector = normalize(surfaceToLightDirection + surfaceToViewDirection);
 
         vec4 metal = texture2D(uMetalSampler, vTextureCoord);
-        vec4 color = texture2D(uColorSampler, vTextureCoord);// * uAmbientLightColor;
+        vec4 color = texture2D(uColorSampler, vTextureCoord);
         //vec4 color = vec4(0.1,0.1,0.1,1.0);
         vec3 ambient = color.rgb * uAmbientLightColor.rgb;
 
@@ -114,9 +123,9 @@
 
         vec3 normal = texture2D(uNormalSampler, vTextureCoord).rgb;
         normal = normal * 2.0 - 1.0;
-        float light = dot(normal, normalize(vTangentLightDirection));
-        //float light = dot(normal, surfaceToLightDirection);
-        vec3 diffuce = uDirectionalLightColor.rgb * color.rgb * max(0.0,light);
+        //float light = dot(normal, normalize(vTangentLightPosition));
+        float light = dot(normal, surfaceToLightDirection);
+        vec3 diffuse = uDirectionalLightColor.rgb * color.rgb * max(0.0,light);
 
 
         vec4 specularColor = texture2D(uSpecularSampler, vTextureCoord);// * 2.0;
@@ -130,32 +139,37 @@
         //color.rgb += textureCube(uCubeSampler, reflection).rgb * metal.rgb;
         vec3 reflection = textureCube(uCubeSampler, r).rgb * specularColor.rgb * metal.rgb;
 
-        gl_FragColor = vec4(ambient + diffuce + specular + reflection, color.a);
+        gl_FragColor = vec4(ambient + diffuse + specular + reflection, 1.0);
       }
     </script>
 
-    <script id="cube-vertex-shader-old" type="x-shader/x-vertex">
+    <script id="simple-no-lights-vertex-shader" type="x-shader/x-vertex">
 
       attribute vec4 aVertexPosition;
       attribute vec2 aTextureCoord;
-      attribute vec3 aVertexNormal;
 
       varying highp vec2 vTextureCoord;
-      varying highp vec3 vVertexNormal;
-      //varying highp vec4 vVertexColor;
 
-      //uniform mat4 uModelViewMatrix;
-      //uniform mat4 uProjectionMatrix;
       uniform mat4 uWorldViewProjectionMatrix;
-      uniform mat4 uWorldMatrix;
 
       void main() {
-       //vec4 position = vec4(aVertexPosition.xyz,1.0);
-        //gl_Position = uProjectionMatrix * uModelViewMatrix * position;
         gl_Position = uWorldViewProjectionMatrix * aVertexPosition;
         vTextureCoord = aTextureCoord;
-        vVertexNormal = mat3(uWorldMatrix) * aVertexNormal;
-        //vVertexColor = dot(normal,uLightDirection) * vec4(1.0,1.0,1.0,1.0);
+      }
+    </script>
+
+    <script id="simple-no-lights-fragment-shader" type="x-shader/x-fragment">
+      precision mediump float;
+
+      varying highp vec2 vTextureCoord;
+      uniform sampler2D uColorSampler;
+      uniform vec4 uAmbientLightColor;
+
+      void main() {
+        vec4 color = texture2D(uColorSampler, vTextureCoord) * (0.5 + uAmbientLightColor);
+        //vec4 color = texture2D(uColorSampler, vTextureCoord) * uAmbientLightColor;
+        gl_FragColor = color;
+        gl_FragColor.a = 1.0;
       }
     </script>
 
@@ -199,8 +213,64 @@
 
       attribute vec4 aVertexPosition;
 
+      varying highp vec2 vTextureCoord;
+      varying highp vec2 vPosition;
+
       void main() {
         gl_Position = aVertexPosition;
+        vPosition = aVertexPosition.xy;
+        vTextureCoord = (aVertexPosition.xy * 0.5) + 0.5;
+      }
+    </script>
+
+    <script id="flat-fragment-shader" type="x-shader/x-fragment">
+      precision mediump float;
+
+      varying highp vec2 vTextureCoord;
+      varying highp vec2 vPosition;
+      uniform sampler2D uColorSampler;
+      uniform float uFlicker;
+      uniform float uNow;
+
+      void main() {
+        /*
+        vec2 uv = vec2(
+          vTextureCoord.x + sin(vTextureCoord.x*1.0 + vTextureCoord.y*2.0 + uNow) * 0.1,
+          vTextureCoord.y + cos(vTextureCoord.x*2.0 + vTextureCoord.y*1.0 + uNow) * 0.1
+        );*/
+
+        vec2 uv = vec2(
+          vTextureCoord.x + sin((vPosition.x+vPosition.y+uNow*10.0)*4.0) * 0.01,
+          vTextureCoord.y + cos((vPosition.x+vPosition.y+uNow*10.0)*4.0) * 0.01
+        );
+
+
+        //gl_FragColor = texture2D(uColorSampler, vTextureCoord);
+        gl_FragColor = texture2D(uColorSampler, uv);
+
+
+        gl_FragColor.b *= 1.0 + max(0.0, 1.0 - gl_FragColor.b) * 0.25;
+        gl_FragColor.g *= 1.0 + max(0.0, 1.0 - gl_FragColor.g) * 0.25;
+        gl_FragColor.r *= 1.0 + min(1.0, gl_FragColor.r) * 0.25;
+        //gl_FragColor.g *= 1.0 + min(1.0, gl_FragColor.g) * 0.25;
+        /*
+        gl_FragColor.r = max(0.0, gl_FragColor.r - 0.01) * 1.01;
+        gl_FragColor.g = max(0.0, gl_FragColor.g - 0.01) * 1.01;
+        gl_FragColor.b = max(0.0, gl_FragColor.b - 0.01) * 1.01;
+        */
+        gl_FragColor.rgb += uFlicker;
+      }
+    </script>
+
+    <script id="alpha-fragment-shader" type="x-shader/x-fragment">
+      precision mediump float;
+
+      varying highp vec2 vTextureCoord;
+      uniform sampler2D uColorSampler;
+      uniform vec4 uColor;
+
+      void main() {
+        gl_FragColor = texture2D(uColorSampler, vTextureCoord) * uColor;
       }
     </script>
 
@@ -208,7 +278,6 @@
   </head>
   <body>
     <canvas id="webgl-canvas" width="480" height="480"></canvas>
-    <canvas id="webgl-canvas-2" width="480" height="480"></canvas>
 
     <div class="slide">
       <section id="outron" class="hidden">
@@ -304,6 +373,7 @@
       <div>delta: <span id="debug-delta"></span></div>
       <div><span id="debug-output"></span></div>
       <div id="debug-canvas"></div>
+      <div id="debug-bg-light-color-buttons"></div>
       <div id="debug-light-color-buttons"></div>
 
       <div>
@@ -339,7 +409,6 @@
         <select id="display-element-id-input">
           <option value="outron">OUTRON logo</option>
           <option value="webgl-canvas">Canvas</option>
-          <option value="webgl-canvas-2">Canvas 2</option>
           <option value="text">Text Layer 1</option>
           <option value="text-2">Text Layer 2</option>
           <option value="text-3">Text Layer 3</option>
@@ -507,6 +576,7 @@
       if (showDevTools === true) {
         document.getElementById("debug").style.display = "block";
         renderLightPaletteButtons();
+        renderBGLightPaletteButtons();
       }
 
       if (showEvents === true) {
@@ -547,6 +617,31 @@
           //document.getElementById("outron").style.opacity = 0.0;
           main({ musicEnabled, clearEffects, showDevTools });
         }
+      }
+    }
+
+    function renderBGLightPaletteButtons() {
+      const lightPaletteButtonsElement = document.getElementById(
+        "debug-bg-light-color-buttons"
+      );
+      for (let i = 0; i < lightPalette.length; i++) {
+        const buttonElement = document.createElement("button");
+        buttonElement.type = "button";
+        buttonElement.style.backgroundColor = `rgb(${
+          lightPalette[i][0] * 255
+        },${lightPalette[i][1] * 255},${lightPalette[i][2] * 255})`;
+
+        buttonElement.onclick = (event) => {
+          console.log(lightPalette[i]);
+          eventToBeAdded = {
+            id: `bg-light-color-${
+              timeline.getEventsByType(EVENT_TYPES.BG_LIGHT_COLOR).length + 1
+            }`,
+            type: EVENT_TYPES.BG_LIGHT_COLOR,
+            params: { index: i },
+          };
+        };
+        lightPaletteButtonsElement.appendChild(buttonElement);
       }
     }
 
@@ -640,6 +735,13 @@
         const eventParamsCellElement = document.createElement("td");
         eventParamsCellElement.style.width = "5px";
         switch (event.type) {
+          case EVENT_TYPES.BG_LIGHT_COLOR: {
+            const color = lightPalette[event.params.index];
+            eventParamsCellElement.style.backgroundColor = `rgb(${
+              color[0] * 255
+            },${color[1] * 255},${color[2] * 255})`;
+            break;
+          }
           case EVENT_TYPES.LIGHT_COLOR: {
             const color = lightPalette[event.params.index];
             eventParamsCellElement.style.backgroundColor = `rgb(${
@@ -654,28 +756,12 @@
               TEXT_STYLES[event.params.style].fill;
             break;
           }
-          case EVENT_TYPES.DISPLAY: {
+          case EVENT_TYPES.CLASSNAME: {
             eventParamsCellElement.textContent = event.params.id;
             break;
           }
           case EVENT_TYPES.EFFECT: {
             eventParamsCellElement.textContent = EFFECTS[event.params.id].name;
-            break;
-          }
-          case EVENT_TYPES.PALETTE: {
-            eventParamsCellElement.textContent = event.params.index;
-            break;
-          }
-          case EVENT_TYPES.TEXTURE: {
-            switch (event.params.texture) {
-              case TEXTURES.STRIPES:
-                eventParamsCellElement.textContent = "Stripes";
-                break;
-              case TEXTURES.GRID:
-                eventParamsCellElement.textContent = "Grid";
-                break;
-            }
-
             break;
           }
         }
@@ -779,7 +865,7 @@
       ).value;
 
       eventToBeAdded = {
-        type: EVENT_TYPES.DISPLAY,
+        type: EVENT_TYPES.CLASSNAME,
         params: {
           id,
           className,

@@ -1,4 +1,4 @@
-class Mesh {
+class OBJMesh {
   constructor({
     name = "",
     material = "GRAY",
@@ -105,7 +105,7 @@ function parseOBJ(str) {
         case "#":
           break;
         case "o":
-          mesh = new Mesh({ name: values.join(" ") });
+          mesh = new OBJMesh({ name: values.join(" ") });
           meshes.push(mesh);
           break;
         case "usemtl":
