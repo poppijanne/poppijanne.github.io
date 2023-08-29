@@ -5,7 +5,7 @@ class ResourceLoader {
   }*/
 
   loadTexture(gl, library, file) {
-    const url = `/img/${library}/${file}`;
+    const url = `/demo2/img/${library}/${file}`;
     console.log(`loading texture ${url}`);
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
